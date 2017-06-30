@@ -1,0 +1,7 @@
+*
+
+!*/
+!*.cs
+!Assets/**/*.txt
+!Assets/**/AX-CPT/*.png
+!.gitignore
