@@ -14,6 +14,10 @@ namespace AXCPT {
 			this.cue = cue;
 			this.target = target;
 		}
+
+		public override string ToString() {
+			return cue.ToString () + target.ToString ();
+		}
 	}
 
 	public enum TrialState { Starting, Cue, ISI, Target, ITI, Ending };
@@ -51,39 +55,76 @@ namespace AXCPT {
 		}
 	}
 
+	public class TrialOutput {
+		public readonly int num;
+		public readonly TrialType type;
+		public readonly RecordResponses.Response response;
+
+		public TrialOutput(int num, TrialType type, RecordResponses.Response response) {
+			this.num = num;
+			this.type = type;
+			this.response = response;
+		}
+
+		public override string ToString() {
+			return num.ToString () + "," +
+			type.ToString () + "," +
+			response.buttonPressed + "," +
+			(response == RecordResponses.EMPTY_RESPONSE ? "" : response.responseTime.ToString ());
+		}
+	}
+
 	public class AXCPT : MonoBehaviour {
 		public ShowImage whiteboard;
 		public TrialList trials;
 		public Textures textures;
+		public RecordResponses recorder;
 
 		private int currentTrial;
 		private TrialState trialState;
 		private CountdownTimer timer;
+		private CountdownTimer recordingTimer;
+		private CSVWriter recordResults;
 
-		// Use this for initialization
 		void Start () {
 			currentTrial = 0;
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
-			whiteboard.Show ();
+			recordingTimer = new CountdownTimer (1.2f);
+			recordResults = new CSVWriter ("results.csv");
+			recordResults.WriteRow ("trial_number,trial_type,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
 		}
-		
-		// Update is called once per frame
+
 		void Update () {
 			if (trialState != TrialState.Ending && timer.isComplete) {
-				currentTrial++;
-				if (trialState == TrialState.ITI && currentTrial == trials.trialTypes.Length) {
-					trialState = TrialState.Ending;
-					return;
+				if (trialState == TrialState.ITI) {
+					currentTrial++;
+					if (currentTrial == trials.trialTypes.Length) {
+						trialState = TrialState.Ending;
+						recordResults.Close ();
+						whiteboard.Hide ();
+						return;
+					}
 				}
+
 				trialState = trialState.Next ();
 				print ("Starting state " + trialState);
 
-				whiteboard.img.texture = trialState.GetTexture(trials.trialTypes[currentTrial], textures);
+				whiteboard.SetTexture(trialState.GetTexture(trials.trialTypes[currentTrial], textures));
+				whiteboard.Show ();
 
 				timer.duration = trialState.Duration ();
+				if (trialState == TrialState.Target) {
+					recorder.StartRecording ();
+					recordingTimer.Start ();
+				}
 				timer.Start ();
+			}
+			if (recorder.isRecording && recordingTimer.isComplete) {
+				var response = recorder.StopRecording ();
+				var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], response);
+				recordResults.WriteRow (output.ToString());
 			}
 		}
 	}

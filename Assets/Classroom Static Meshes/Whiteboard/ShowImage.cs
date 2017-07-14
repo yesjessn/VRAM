@@ -22,4 +22,8 @@ public class ShowImage : MonoBehaviour {
 	public void Show() {
 		img.gameObject.SetActive (true);
 	}
+
+	public void SetTexture(Texture texture) {
+		img.texture = texture;
+	}
 }
