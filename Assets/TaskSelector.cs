@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using AXCPT;
+using Math;
 
 public class TaskSelector : MonoBehaviour {
 
 	public GameObject[] tasks;
 	public Dropdown taskDropdown;
 	public Dropdown categoryDropdown;
+	public Dropdown gradeDropdown;
 	public GameObject mainMenu;
 	public GameObject axcptMenu;
 	public GameObject mathMenu;
 	public GameObject axcptTask;
+	public GameObject mathTask;
 
 
 	public void SelectTask() {
@@ -44,6 +47,14 @@ public class TaskSelector : MonoBehaviour {
 		categoryloader.LoadCategory (selectedCategory);
 		axcptMenu.SetActive (false);
 		axcptTask.SetActive (true);
+	}
+
+	public void SelectMathGrade() {
+		var selectedGrade = gradeDropdown.value + 1;
+		GradeLoader gradeloader = mathTask.GetComponent (typeof(GradeLoader)) as GradeLoader;
+		gradeloader.LoadGrade (selectedGrade);
+		mathMenu.SetActive (false);
+		mathTask.SetActive (true);
 	}
 
 }

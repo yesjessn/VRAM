@@ -27,6 +27,7 @@ public class RecordResponses : MonoBehaviour {
 	private Response response;
 
 	public bool isRecording { get { return recording; } }
+	public bool hasResponse { get { return response != null; } }
 
 	void Start () {
 		recording = false;
@@ -42,10 +43,12 @@ public class RecordResponses : MonoBehaviour {
 	public Response StopRecording() {
 		print ("stopping recording");
 		recording = false;
-		if (response == null) {
+		var record = response;
+		response = null;
+		if (record == null) {
 			return EMPTY_RESPONSE;
 		} else {
-			return response;
+			return record;
 		}
 	}
 

@@ -9,16 +9,6 @@ namespace AXCPT {
 		public Texture isi;
 		public Texture iti;
 
-		// Use this for initialization
-		void Start () {
-			
-		}
-		
-		// Update is called once per frame
-		void Update () {
-			
-		}
-
 		public Texture Get(TrialItem type) {
 			switch (type) {
 			case TrialItem.A:

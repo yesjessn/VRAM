@@ -2,89 +2,130 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Math : MonoBehaviour {
+namespace Math {
+	public enum BlockType {Easy, Medium};
 
-//	public enum TrialItem {A, B, X, Y};
-//
-//	// Class to hold the cue and target types
-//	public class TrialType {
-//		public TrialItem cue { get; }
-//		public TrialItem target { get; }
-//
-//		public TrialType(TrialItem cue, TrialItem target) {
-//			this.cue = cue;
-//			this.target = target;
-//		}
-//	}
-	/*
 	public enum TrialState { Starting, Problem, ITI, Ending };
 
 	public static class TrialStateExtensions {
 		public static float Duration(this TrialState state) {
 			switch (state) {
-			case TrialState.Problem: return 1f;
-			case TrialState.ITI:    return 1f;
-			default:                return -1f;
+			case TrialState.Problem: return 10.0f;
+			case TrialState.ITI:     return 2.0f;
+			default:                 return -1f;
 			}
 		}
 
 		public static TrialState Next(this TrialState state) {
 			switch (state) {
-			case TrialState.Starting: return TrialState.Cue;
-			case TrialState.Cue:      return TrialState.ISI;
-			case TrialState.ISI:      return TrialState.Target;
-			case TrialState.Target:   return TrialState.ITI;
-			case TrialState.ITI:      return TrialState.Cue;
+			case TrialState.Starting: return TrialState.Problem;
+			case TrialState.Problem:  return TrialState.ITI;
+			case TrialState.ITI:      return TrialState.Problem;
 			default:                  return TrialState.Ending;
 			}
 		}
 
-		public static Texture GetTexture(this TrialState state, TrialType type, Textures textures) {
+		public static Texture GetTexture(this TrialState state, BlockType type, Textures textures) {
 			switch (state) {
-			case TrialState.Cue:    return textures.Get(type.cue);
-			case TrialState.ISI:    return textures.isi;
-			case TrialState.Target: return textures.Get(type.target);
+			case TrialState.Problem: return textures.Get(type);
 			case TrialState.ITI:    return textures.iti;
 			default:                return null;
 			}
 		}
 	}
 
-	public class AXCPT : MonoBehaviour {
-		public ShowImage whiteboard;
-		public TrialList trials;
-		public Textures textures;
+	public class TrialOutput {
+		public readonly int trialNum;
+		public readonly int blockNum;
+		public readonly BlockType type;
+		public readonly RecordResponses.Response response;
 
-		private int currentTrial;
-		private TrialState trialState;
-		private CountdownTimer timer;
-
-		// Use this for initialization
-		void Start () {
-			currentTrial = 0;
-			trialState = TrialState.Starting;
-			timer = new CountdownTimer (-1);
-			whiteboard.Show ();
-			print ("Starting AX-CPT");
+		public TrialOutput(int trialNum, int blockNum, BlockType type, RecordResponses.Response response) {
+			this.trialNum = trialNum;
+			this.blockNum = blockNum;
+			this.type = type;
+			this.response = response;
 		}
 
-		// Update is called once per frame
+		public override string ToString() {
+			return trialNum.ToString () + "," +
+				blockNum.ToString() + "," +
+				type.ToString () + "," +
+				response.buttonPressed + "," +
+				(response == RecordResponses.EMPTY_RESPONSE ? "" : response.responseTime.ToString ());
+		}
+	}
+
+	public class Math : MonoBehaviour {
+		const int NumberOfBlocks = 6;
+		const float BlockTime = 3 * 60.0f;
+
+		public ShowImage whiteboard;
+		public Textures textures;
+		public RecordResponses recorder;
+
+		private TrialState trialState;
+		private int currentTrial;
+		private BlockType type;
+		private int currentBlock;
+		private CountdownTimer trialTimer;
+		private CountdownTimer blockTimer;
+		private CSVWriter recordResults;
+
+		void Start () {
+			currentTrial = 0;
+			currentBlock = 0;
+			type = BlockType.Easy;
+			trialState = TrialState.Starting;
+			trialTimer = new CountdownTimer (-1);
+			blockTimer = new CountdownTimer (BlockTime);
+			recordResults = new CSVWriter ("math_results.csv");
+			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
+			print ("Starting Math");
+		}
+
 		void Update () {
-			if (trialState != TrialState.Ending && timer.isComplete) {
-				currentTrial++;
-				if (trialState == TrialState.ITI && currentTrial == trials.trialTypes.Length) {
-					trialState = TrialState.Ending;
-					return;
+			if (trialState != TrialState.Ending) {
+				var blockComplete = blockTimer.isComplete;
+				if (blockComplete) {
+					currentBlock++;
+					if (currentBlock == NumberOfBlocks) {
+						trialState = TrialState.Ending;
+						recordResults.Close ();
+						whiteboard.Hide ();
+						return;
+					}
+					switch (type) {
+					case BlockType.Easy:
+						type = BlockType.Medium;
+						break;
+					case BlockType.Medium:
+						type = BlockType.Easy;
+						break;
+					}
+					blockTimer.Start ();
 				}
-				trialState = trialState.Next ();
-				print ("Starting state " + trialState);
+				if (trialTimer.isComplete || blockComplete || recorder.hasResponse) {
+					if (trialState == TrialState.Problem) {	
+						var response = recorder.StopRecording ();
+						var output = new TrialOutput (currentTrial, currentBlock, type, response);
+						recordResults.WriteRow (output.ToString());
+					}
+					trialState = trialState.Next ();
+					print ("Starting state " + trialState);
 
-				whiteboard.img.texture = trialState.GetTexture(trials.trialTypes[currentTrial], textures);
+					whiteboard.SetTexture(trialState.GetTexture(type, textures));
+					whiteboard.Show ();
 
-				timer.duration = trialState.Duration ();
-				timer.Start ();
+					trialTimer.duration = trialState.Duration ();
+					if (trialState == TrialState.Problem) {
+						currentTrial++;
+						recorder.StartRecording ();
+					}
+					trialTimer.Start ();
+				}
 			}
 		}
 	}
-	*/
 }
+
