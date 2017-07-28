@@ -16,7 +16,7 @@ public class TaskSelector : MonoBehaviour {
 	public GameObject mathMenu;
 	public GameObject axcptTask;
 	public GameObject mathTask;
-
+	public GameObject verbalStroopTask;
 
 	public void SelectTask() {
 		var selectedTask = taskDropdown.value;
@@ -31,6 +31,7 @@ public class TaskSelector : MonoBehaviour {
 			break;
 		case 2:
 			mainMenu.SetActive (false);
+			verbalStroopTask.SetActive (true);
 			break;
 		}
 	}
@@ -50,7 +51,7 @@ public class TaskSelector : MonoBehaviour {
 	}
 
 	public void SelectMathGrade() {
-		var selectedGrade = gradeDropdown.value + 1;
+		var selectedGrade = gradeDropdown.value + 3;
 		GradeLoader gradeloader = mathTask.GetComponent (typeof(GradeLoader)) as GradeLoader;
 		gradeloader.LoadGrade (selectedGrade);
 		mathMenu.SetActive (false);
