@@ -20,7 +20,7 @@ namespace AXCPT {
 		}
 	}
 
-	public enum TrialState { Starting, Cue, ISI, Target, ITI, Ending };
+	public enum TrialState { Starting, Instruction1, Instruction2, Instruction3, Instruction4, Ready, Cue, ISI, Target, ITI, Ending };
 
 	public static class TrialStateExtensions {
 		public static float Duration(this TrialState state) {
@@ -33,14 +33,31 @@ namespace AXCPT {
 			}
 		}
 
+		public static string Instructions(this TrialState state, Textures textures) {
+			switch (state) {
+			case TrialState.Starting:     return "<size=3>AX-CPT Task</size>\n\n<size=1><i>Press any key to continue</i></size>";
+			case TrialState.Instruction1: return "<size=2>For each trial,\nyou will see\na pair of\npictures with\ntext below.\n\n</size><size=1><i>Press any key to continue</i></size>";
+			case TrialState.Instruction2: return "<size=2>The 1st picture will\nhave <color=blue>blue</color> text.\nThe 2nd picture will\nhave <color=orange>orange</color> text.\nYour goal is to\nfind the special pair.</size>";
+			case TrialState.Instruction3: return "<size=2>The special pair\nis <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.\nIf you see\nthis pair, press <b>1</b>.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Instruction4: return "<size=2>For all other\n pairs, press <b>2</b>.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Ready:        return "<size=2><b>Remember: <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.</b></size>\n\n<size=1><i>Press 1 to begin task.</i></size>";
+			default:                      return "";
+			}
+		}
+
 		public static TrialState Next(this TrialState state) {
 			switch (state) {
-			case TrialState.Starting: return TrialState.Cue;
-			case TrialState.Cue:      return TrialState.ISI;
-			case TrialState.ISI:      return TrialState.Target;
-			case TrialState.Target:   return TrialState.ITI;
-			case TrialState.ITI:      return TrialState.Cue;
-			default:                  return TrialState.Ending;
+			case TrialState.Starting:     return TrialState.Instruction1;
+			case TrialState.Instruction1: return TrialState.Instruction2;
+			case TrialState.Instruction2: return TrialState.Instruction3;
+			case TrialState.Instruction3: return TrialState.Instruction4;
+			case TrialState.Instruction4: return TrialState.Ready;
+			case TrialState.Ready:        return TrialState.Cue;
+			case TrialState.Cue:          return TrialState.ISI;
+			case TrialState.ISI:          return TrialState.Target;
+			case TrialState.Target:       return TrialState.ITI;
+			case TrialState.ITI:          return TrialState.Cue;
+			default:                      return TrialState.Ending;
 			}
 		}
 
@@ -84,7 +101,7 @@ namespace AXCPT {
 		private int currentTrial;
 		private TrialState trialState;
 		private CountdownTimer timer;
-		private CountdownTimer recordingTimer;
+		private CountdownTimer recordingTimer; 
 		private CSVWriter recordResults;
 
 		void Start () {
@@ -95,23 +112,19 @@ namespace AXCPT {
 			recordResults = new CSVWriter ("results.csv");
 			recordResults.WriteRow ("trial_number,trial_type,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
-			whiteboardText.SetText ("<b><size=1>For each trial,\nyou will see a picture with <color=blue>blue</color> text\nthen a picture with <color=orange>orange</color> text.\nIf you see a/an "
-				+ "<color=blue>"
-				+ textures.a_group[0].name
-				+ "</color>"
-				+ "\nbefore a/an "
-				+ "<color=orange>"
-				+ textures.x_group[0].name
-				+ "</color>"
-				+ " then press 1.\nFor everything else, press 2.\n\nPress any key to start.</size></b>");
+			whiteboardText.SetText (trialState.Instructions(textures));
 			whiteboardText.Show ();
 		}
 
 		void Update () {
-			var finishStarting = trialState == TrialState.Starting && Input.anyKey;
-			var finishState = trialState != TrialState.Ending && trialState != TrialState.Starting && timer.isComplete;
+			var finishState = (int)trialState >= (int)TrialState.Cue && (int)trialState <= (int)TrialState.ITI && timer.isComplete;
 
-			if (finishStarting || finishState) {
+			if (((int)trialState < (int)TrialState.Ready) && Input.anyKeyDown) {
+				trialState = trialState.Next ();
+				whiteboardText.SetText (trialState.Instructions(textures));
+				return;
+			} 
+			if ((trialState == TrialState.Ready && Input.GetButtonDown("Button1")) || finishState) {
 				whiteboardText.Hide ();
 				if (trialState == TrialState.ITI) {
 					currentTrial++;
