@@ -75,7 +75,8 @@ namespace AXCPT {
 	}
 
 	public class AXCPT : MonoBehaviour {
-		public ShowImage whiteboard;
+		public ShowText whiteboardText;
+		public ShowImage whiteboardImage;
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
@@ -94,16 +95,30 @@ namespace AXCPT {
 			recordResults = new CSVWriter ("results.csv");
 			recordResults.WriteRow ("trial_number,trial_type,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
+			whiteboardText.SetText ("<b><size=1>For each trial,\nyou will see a picture with <color=blue>blue</color> text\nthen a picture with <color=orange>orange</color> text.\nIf you see a/an "
+				+ "<color=blue>"
+				+ textures.a_group[0].name
+				+ "</color>"
+				+ "\nbefore a/an "
+				+ "<color=orange>"
+				+ textures.x_group[0].name
+				+ "</color>"
+				+ " then press 1.\nFor everything else, press 2.\n\nPress any key to start.</size></b>");
+			whiteboardText.Show ();
 		}
 
 		void Update () {
-			if (trialState != TrialState.Ending && timer.isComplete) {
+			var finishStarting = trialState == TrialState.Starting && Input.anyKey;
+			var finishState = trialState != TrialState.Ending && trialState != TrialState.Starting && timer.isComplete;
+
+			if (finishStarting || finishState) {
+				whiteboardText.Hide ();
 				if (trialState == TrialState.ITI) {
 					currentTrial++;
 					if (currentTrial == trials.trialTypes.Length) {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
-						whiteboard.Hide ();
+						whiteboardImage.Hide ();
 						return;
 					}
 				}
@@ -111,8 +126,8 @@ namespace AXCPT {
 				trialState = trialState.Next ();
 				print ("Starting state " + trialState);
 
-				whiteboard.SetTexture(trialState.GetTexture(trials.trialTypes[currentTrial], textures));
-				whiteboard.Show ();
+				whiteboardImage.SetTexture(trialState.GetTexture(trials.trialTypes[currentTrial], textures));
+				whiteboardImage.Show ();
 
 				timer.duration = trialState.Duration ();
 				if (trialState == TrialState.Target) {
