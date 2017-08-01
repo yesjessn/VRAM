@@ -35,9 +35,9 @@ namespace AXCPT {
 
 		public static string Instructions(this TrialState state, Textures textures) {
 			switch (state) {
-			case TrialState.Starting:     return "<size=3>AX-CPT Task</size>\n\n<size=1><i>Press any key to continue</i></size>";
-			case TrialState.Instruction1: return "<size=2>For each trial,\nyou will see\na pair of\npictures with\ntext below.\n\n</size><size=1><i>Press any key to continue</i></size>";
-			case TrialState.Instruction2: return "<size=2>The 1st picture will\nhave <color=blue>blue</color> text.\nThe 2nd picture will\nhave <color=orange>orange</color> text.\nYour goal is to\nfind the special pair.</size>";
+			case TrialState.Starting:     return "<size=3>AX-CPT Task</size>\n\n<size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Instruction1: return "<size=2>For each trial,\nyou will see\na pair of\npictures with\ntext below.\n\n</size><size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Instruction2: return "<size=2>The 1st picture will\nhave <color=blue>blue</color> text.\nThe 2nd picture will\nhave <color=orange>orange</color> text.\nYour goal is to\nfind the special pair.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
 			case TrialState.Instruction3: return "<size=2>The special pair\nis <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.\nIf you see\nthis pair, press <b>1</b>.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
 			case TrialState.Instruction4: return "<size=2>For all other\n pairs, press <b>2</b>.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
 			case TrialState.Ready:        return "<size=2><b>Remember: <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.</b></size>\n\n<size=1><i>Press 1 to begin task.</i></size>";
@@ -117,6 +117,7 @@ namespace AXCPT {
 		}
 
 		void Update () {
+			var finishInstructions = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
 			var finishState = (int)trialState >= (int)TrialState.Cue && (int)trialState <= (int)TrialState.ITI && timer.isComplete;
 
 			if (((int)trialState < (int)TrialState.Ready) && Input.anyKeyDown) {
@@ -124,7 +125,7 @@ namespace AXCPT {
 				whiteboardText.SetText (trialState.Instructions(textures));
 				return;
 			} 
-			if ((trialState == TrialState.Ready && Input.GetButtonDown("Button1")) || finishState) {
+			if (finishInstructions || finishState) {
 				whiteboardText.Hide ();
 				if (trialState == TrialState.ITI) {
 					currentTrial++;
