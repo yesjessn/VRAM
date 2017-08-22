@@ -11,8 +11,8 @@ namespace Math {
 		public static float Duration(this TrialState state) {
 			switch (state) {
 			case TrialState.Problem: return 10.0f;
-			case TrialState.ITI:     return 2.0f;
-			default:                 return -1f;
+			case TrialState.ITI:     return  2.0f;
+			default:                 return -1.0f;
 			}
 		}
 
@@ -61,7 +61,9 @@ namespace Math {
 		const float BlockTime = 3 * 60.0f;
 
 		public ShowImage whiteboard;
-		public Textures textures;
+        public ShowText whiteboardText;
+
+        public Textures textures;
 		public RecordResponses recorder;
 
 		private TrialState trialState;
@@ -79,7 +81,9 @@ namespace Math {
 			trialState = TrialState.Starting;
 			trialTimer = new CountdownTimer (-1);
 			blockTimer = new CountdownTimer (BlockTime);
-			recordResults = new CSVWriter ("math_results.csv");
+            whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
+            whiteboard = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
+            recordResults = new CSVWriter ("math_results.csv");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
 			print ("Starting Math");
 		}
