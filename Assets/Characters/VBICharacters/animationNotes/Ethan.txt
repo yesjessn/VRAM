@@ -1,0 +1,13 @@
+Ethan Animation Notes
+
+setAttr leftArm1_ArmIKHandle.translate -type "double3" -15.310352 -14.696573 13.72978
+setAttr rightArm1_ArmIKHandle.translate -type "double3" 18.796041 20.910994 -3.497698
+
+10-350 standing loop
+
+400-690 idle loop001
+
+800-1090 idle loop002
+
+1200-1490 idle loop003
+

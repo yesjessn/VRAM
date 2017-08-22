@@ -1,0 +1,74 @@
+Animation Notes
+
+
+10-250 idle loop 001
+
+300-880 idle loop 002
+
+1000-1375 idle loop 003
+
+1500-1750 idle loop 004
+
+1800-2240 idle loop 005
+
+2300-2600 whispering to classmate
+
+
+Kid Geometry Groups
+
+I think you will only need 6 or 7 of these,
+but there are extras made if needed.
+
+	001
+	  bob
+	  tee
+	  pants
+	  trainers
+
+	002
+	  ponytail
+	  blouse
+	  shorts
+	  ballet flats
+
+	003
+	  ponytail
+	  button up
+	  pants
+	  ballet flats
+
+	004
+	  hair cards
+	  tucked in tee
+	  pants
+	  ballet flats
+
+	005
+	  ponytail
+	  tee
+	  pants
+	  trainers
+
+	006
+	  bob
+	  button up
+	  shorts
+	  trainers
+
+	007
+	  bob
+	  tee
+	  skirt
+	  ballet flats
+
+	008
+	  short hair or hair cards
+	  sleeveless tee
+	  pants
+	  trainers
+
+	009
+	  short hair
+	  tee
+	  pants
+	  trainers

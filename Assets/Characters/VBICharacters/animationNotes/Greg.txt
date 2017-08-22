@@ -1,0 +1,5 @@
+greg animation notes
+
+10-350 idle loop001
+
+400-800 idle loop002

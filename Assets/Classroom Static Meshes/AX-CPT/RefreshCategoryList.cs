@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using System.IO;
 using System.Collections.Generic;
+#if (UNITY_EDITOR) 
 using UnityEditor;
 
 namespace AXCPT {
@@ -60,3 +61,4 @@ namespace AXCPT {
 		}
 	}
 }
+#endif

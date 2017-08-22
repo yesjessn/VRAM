@@ -1,0 +1,12 @@
+setAttr leftArm1_ArmIKHandle.translate -type "double3" -16.392648 -21.284488 1.264143
+setAttr rightArm1_ArmIKHandle.translate -type "double3" 16.636425 7.021427 -13.906277
+
+
+Keith Animation Notes
+
+0010-1000 idle loop001
+
+1100-1400 idle loop002
+
+1400-1600 pencil drop
+	  this plays from idle loop 2
