@@ -51,7 +51,9 @@ public class TaskSelector : MonoBehaviour {
 			break;
 		case 3:
 			mainMenu.SetActive (false);
-			verbalStroopTask.SetActive (true);
+			//verbalStroopTask.SetActive (true);
+			_activeTask = verbalStroopTask;
+			SceneManager.LoadScene ("VRClassRoom");
 			break;
 		}
 	}
