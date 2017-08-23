@@ -71,10 +71,12 @@ namespace AXCPT {
 			case TrialState.Instruction3: return TrialState.Instruction4;
 			case TrialState.Instruction4: return TrialState.Instruction5;
 			case TrialState.Instruction5: return TrialState.Ready;
+			case TrialState.Ready:        return TrialState.ITI;
 			case TrialState.Cue:          return TrialState.ISI;
 			case TrialState.ISI:          return TrialState.Probe;
 			case TrialState.Probe:       return TrialState.ITI;
 			case TrialState.ITI:          return TrialState.Cue;
+			case TrialState.Slow:         return TrialState.ITI;
 			default:                      return TrialState.Ending;
 			}
 		}
