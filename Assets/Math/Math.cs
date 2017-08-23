@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,9 +39,9 @@ namespace Math {
 		public readonly int trialNum;
 		public readonly int blockNum;
 		public readonly BlockType type;
-		public readonly RecordResponses.Response response;
+		public readonly List<RecordResponses.Response> response;
 
-		public TrialOutput(int trialNum, int blockNum, BlockType type, RecordResponses.Response response) {
+		public TrialOutput(int trialNum, int blockNum, BlockType type, List<RecordResponses.Response> response) {
 			this.trialNum = trialNum;
 			this.blockNum = blockNum;
 			this.type = type;
@@ -48,11 +49,20 @@ namespace Math {
 		}
 
 		public override string ToString() {
-			return trialNum.ToString () + "," +
+			var rows = new List<string> ();
+			foreach (RecordResponses.Response r in response) {
+				rows.Add(trialNum.ToString () + "," +
 				blockNum.ToString() + "," +
 				type.ToString () + "," +
-				response.buttonPressed + "," +
-				(response == RecordResponses.EMPTY_RESPONSE ? "" : response.responseTime.ToString ());
+				r.buttonPressed + "," +
+				r.responseTime.ToString ());
+			}
+			if (response.Count == 0) {
+				return trialNum.ToString () + "," +
+					blockNum.ToString() + "," +
+					type.ToString () + ",,";
+			}
+			return String.Join("\n", rows.ToArray ());
 		}
 	}
 
@@ -132,4 +142,3 @@ namespace Math {
 		}
 	}
 }
-

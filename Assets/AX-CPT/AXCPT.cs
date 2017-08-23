@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Distractors;
@@ -6,18 +7,18 @@ using Distractors;
 namespace AXCPT {
 	public enum TrialItem {A, B, X, Y};
 
-	// Class to hold the cue and target types
+	// Class to hold the cue and probe types
 	public class TrialType {
 		public TrialItem cue { get; set; }
-		public TrialItem target { get; set; }
+		public TrialItem probe { get; set; }
 
-		public TrialType(TrialItem cue, TrialItem target) {
+		public TrialType(TrialItem cue, TrialItem probe) {
 			this.cue = cue;
-			this.target = target;
+			this.probe = probe;
 		}
 
 		public bool CheckResponse (string buttonPressed) {
-			if (cue == TrialItem.A && target == TrialItem.X) {
+			if (cue == TrialItem.A && probe == TrialItem.X) {
 				if (buttonPressed == "Button1") {
 					return true;
 				} else {
@@ -32,18 +33,18 @@ namespace AXCPT {
 		}
 
 		public override string ToString() {
-			return cue.ToString () + target.ToString ();
+			return cue.ToString () + probe.ToString ();
 		}
 	}
 
-	public enum TrialState { Starting, Instruction1, Instruction2, Instruction3, Instruction4, Instruction5, Ready, Cue, ISI, Target, ITI, Correct, Incorrect, Slow, Ending };
+	public enum TrialState { Starting, Instruction1, Instruction2, Instruction3, Instruction4, Instruction5, Ready, Cue, ISI, Probe, ITI, Correct, Incorrect, Slow, Ending };
 
 	public static class TrialStateExtensions {
 		public static float Duration(this TrialState state) {
 			switch (state) {
 			case TrialState.Cue:    return  1.0f;
 			case TrialState.ISI:    return  2.0f;
-			case TrialState.Target: return  0.5f;
+			case TrialState.Probe: return  0.5f;
 			case TrialState.ITI:    return  1.2f;
 			default:                return -1.0f;
 			}
@@ -70,12 +71,10 @@ namespace AXCPT {
 			case TrialState.Instruction3: return TrialState.Instruction4;
 			case TrialState.Instruction4: return TrialState.Instruction5;
 			case TrialState.Instruction5: return TrialState.Ready;
-			case TrialState.Ready:        return TrialState.Cue;
 			case TrialState.Cue:          return TrialState.ISI;
-			case TrialState.ISI:          return TrialState.Target;
-			case TrialState.Target:       return TrialState.ITI;
+			case TrialState.ISI:          return TrialState.Probe;
+			case TrialState.Probe:       return TrialState.ITI;
 			case TrialState.ITI:          return TrialState.Cue;
-			case TrialState.Slow:         return TrialState.Cue;
 			default:                      return TrialState.Ending;
 			}
 		}
@@ -84,7 +83,7 @@ namespace AXCPT {
 			switch (state) {
 			case TrialState.Cue:    return textures.Get(type.cue);
 			case TrialState.ISI:    return textures.isi;
-			case TrialState.Target: return textures.Get(type.target);
+			case TrialState.Probe: return textures.Get(type.probe);
 			case TrialState.ITI:    return textures.iti;
 			default:                return null;
 			}
@@ -94,19 +93,31 @@ namespace AXCPT {
 	public class TrialOutput {
 		public readonly int num;
 		public readonly TrialType type;
-		public readonly RecordResponses.Response response;
+		public readonly TrialState state;
+		public readonly List<RecordResponses.Response> response;
 
-		public TrialOutput(int num, TrialType type, RecordResponses.Response response) {
+		public TrialOutput(int num, TrialType type, TrialState state, List<RecordResponses.Response> response) {
 			this.num = num;
 			this.type = type;
+			this.state = state;
 			this.response = response;
 		}
 
 		public override string ToString() {
-			return num.ToString () + "," +
-			type.ToString () + "," +
-			response.buttonPressed + "," +
-			(response == RecordResponses.EMPTY_RESPONSE ? "" : response.responseTime.ToString ());
+			var rows = new List<string> ();
+			foreach (RecordResponses.Response r in response) {
+				rows.Add(num.ToString () + "," +
+				type.ToString () + "," +
+				state.ToString() + "," +
+				r.buttonPressed + "," +
+				r.responseTime.ToString ());
+			}
+			if (response.Count == 0) {
+				return num.ToString () + "," +
+					type.ToString () + "," +
+					state.ToString() + ",,";
+			}
+			return String.Join("\n", rows.ToArray ());
 		}
 	}
 
@@ -121,16 +132,14 @@ namespace AXCPT {
 		private int currentTrial;
 		private TrialState trialState;
 		private CountdownTimer timer;
-		private CountdownTimer recordingTimer; 
 		private CSVWriter recordResults;
 
 		void Start () {
 			currentTrial = 0;
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
-			recordingTimer = new CountdownTimer (1.5f);
 			recordResults = new CSVWriter ("results.csv");
-			recordResults.WriteRow ("trial_number,trial_type,button_pressed,reaction_time");
+			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
             whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
@@ -152,6 +161,13 @@ namespace AXCPT {
 				if (finishInstructions) {
 					distractorController.gameObject.SetActive (true);
 				}
+
+				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.ITI)) {
+					var response = recorder.StopRecording ();
+					var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, response);
+					recordResults.WriteRow (output.ToString());
+				}
+
 				if (trialState == TrialState.ITI) {
 					currentTrial++;
 					if (currentTrial == trials.trialTypes.Length) {
@@ -162,7 +178,7 @@ namespace AXCPT {
 						return;
 					}
 				}
-
+					
 				trialState = trialState.Next ();
 				print ("Starting state " + trialState);
 
@@ -170,17 +186,12 @@ namespace AXCPT {
 				whiteboardImage.Show ();
 
 				timer.duration = trialState.Duration ();
-				if (trialState == TrialState.Target) {
+				if (trialState == TrialState.Cue || trialState == TrialState.Probe) {
 					recorder.StartRecording ();
-					recordingTimer.Start ();
 				}
 				timer.Start ();
 			}
-			if (recorder.isRecording && recordingTimer.isComplete) {
-				var response = recorder.StopRecording ();
-				var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], response);
-				recordResults.WriteRow (output.ToString());
-			}
+
 		}
 	}
 }

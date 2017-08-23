@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -75,21 +76,32 @@ namespace VerbalStroop {
 	public class TrialOutput {
 		public readonly int num;
 		public readonly TrialProperties properties;
-		public readonly RecordResponses.Response response;
+		public readonly List<RecordResponses.Response> response;
 
-		public TrialOutput(int num, TrialProperties properties, RecordResponses.Response response) {
+		public TrialOutput(int num, TrialProperties properties, List<RecordResponses.Response> response) {
 			this.num = num;
 			this.properties = properties;
 			this.response = response;
 		}
 
 		public override string ToString() {
-			return num.ToString () + "," +
+			var rows = new List<string> ();
+			foreach (RecordResponses.Response r in response) {
+				rows.Add(num.ToString () + "," +
 				properties.text.ToString () + "," +
 				properties.color.ToString() + "," +
 				properties.sound.ToString() + "," +
-				response.buttonPressed + "," +
-				(response == RecordResponses.EMPTY_RESPONSE ? "" : response.responseTime.ToString ());
+				r.buttonPressed + "," +
+				r.responseTime.ToString ());
+		}
+
+			if (response.Count == 0) {
+				return num.ToString () + "," +
+					properties.text.ToString () + "," +
+					properties.color.ToString() + "," +
+					properties.sound.ToString() + ",,";
+			}
+			return String.Join("\n", rows.ToArray ());
 		}
 	}
 

@@ -34,7 +34,7 @@ namespace AXCPT {
 		private TrialState trialState;
 		private CountdownTimer timer;
 		private CountdownTimer recordingTimer;
-		private RecordResponses.Response response;
+		private List<RecordResponses.Response> response;
 
 		void Start () {
 			currentTrial = 0;
@@ -59,12 +59,12 @@ namespace AXCPT {
 			if (finishInstructions || finishState || finishTrial) {
 				whiteboardText.Hide ();
 				if (trialState == TrialState.ITI) {
-					if (response == RecordResponses.EMPTY_RESPONSE) {
+					if (response.Count == 0) {
 						trialState = TrialState.Slow;
 						whiteboardImage.Hide ();
 						whiteboardText.SetText (trialState.PracticeInstructions ());
 						whiteboardText.Show ();
-					} else if (trials.trialTypes [currentTrial].CheckResponse (response.buttonPressed)) {
+					} else if (trials.trialTypes [currentTrial].CheckResponse (response[0].buttonPressed)) {
 						trialState = TrialState.Correct;
 						whiteboardImage.Hide ();
 						whiteboardText.SetText (trialState.PracticeInstructions ());
@@ -88,7 +88,7 @@ namespace AXCPT {
 				print ("Starting state " + trialState);
 
 				timer.duration = trialState.Duration ();
-				if (trialState == TrialState.Target) {
+				if (trialState == TrialState.Probe) {
 					recorder.StartRecording ();
 					recordingTimer.Start ();
 				}

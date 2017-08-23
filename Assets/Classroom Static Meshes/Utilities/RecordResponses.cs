@@ -18,47 +18,42 @@ public class RecordResponses : MonoBehaviour {
 			return buttonPressed + " after " + responseTime.ToString();
 		}
 	}
-	public static Response EMPTY_RESPONSE = new Response("", 0);
 
 	public string[] buttons;
 
 	private bool recording;
 	private float recordingStartTime;
-	private Response response;
+	private List<Response> response;
 
 	public bool isRecording { get { return recording; } }
 	public bool hasResponse { get { return response != null; } }
 
 	void Start () {
 		recording = false;
+		response = new List<Response> ();
 	}
 
 	public void StartRecording() {
 		recording = true;
 		recordingStartTime = Time.time;
-		response = null;
+		response.Clear();
 		print ("starting recording");
 	}
 
-	public Response StopRecording() {
+	public List<Response> StopRecording() {
 		print ("stopping recording");
 		recording = false;
-		var record = response;
-		response = null;
-		if (record == null) {
-			return EMPTY_RESPONSE;
-		} else {
-			return record;
-		}
+		return response;
+
 	}
 
 	// Update is called once per frame
 	void Update () {
-		if (recording && response == null) {
+		if (recording) {
 			foreach (string button in buttons) {
 				if (Input.GetButtonDown (button)) {
 					var responseTime = Time.time - recordingStartTime;
-					response = new Response (button, responseTime);
+					response.Add (new Response (button, responseTime));
 					break;
 				}
 			}
