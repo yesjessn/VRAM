@@ -96,12 +96,14 @@ namespace AXCPT {
 		public readonly int num;
 		public readonly TrialType type;
 		public readonly TrialState state;
+		public readonly string stimulusName;
 		public readonly List<RecordResponses.Response> response;
 
-		public TrialOutput(int num, TrialType type, TrialState state, List<RecordResponses.Response> response) {
+		public TrialOutput(int num, TrialType type, TrialState state, string stimulusName, List<RecordResponses.Response> response) {
 			this.num = num;
 			this.type = type;
 			this.state = state;
+			this.stimulusName = stimulusName;
 			this.response = response;
 		}
 
@@ -111,13 +113,15 @@ namespace AXCPT {
 				rows.Add(num.ToString () + "," +
 				type.ToString () + "," +
 				state.ToString() + "," +
+				stimulusName + "," +
 				r.buttonPressed + "," +
 				r.responseTime.ToString ());
 			}
 			if (response.Count == 0) {
 				return num.ToString () + "," +
 					type.ToString () + "," +
-					state.ToString() + ",,";
+					state.ToString() + "," +
+					stimulusName + ",,";
 			}
 			return String.Join("\n", rows.ToArray ());
 		}
@@ -135,13 +139,14 @@ namespace AXCPT {
 		private TrialState trialState;
 		private CountdownTimer timer;
 		private CSVWriter recordResults;
+		private string stimulusName;
 
 		void Start () {
 			currentTrial = 0;
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
 			recordResults = new CSVWriter ("results.csv");
-			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,button_pressed,reaction_time");
+			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,stimulus_name,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
             whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
@@ -166,7 +171,7 @@ namespace AXCPT {
 
 				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.ITI)) {
 					var response = recorder.StopRecording ();
-					var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, response);
+					var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, stimulusName, response);
 					recordResults.WriteRow (output.ToString());
 				}
 
@@ -184,11 +189,13 @@ namespace AXCPT {
 				trialState = trialState.Next ();
 				print ("Starting state " + trialState);
 
-				whiteboardImage.SetTexture(trialState.GetTexture(trials.trialTypes[currentTrial], textures));
+				var selectedTexture = trialState.GetTexture (trials.trialTypes [currentTrial], textures);
+				whiteboardImage.SetTexture(selectedTexture);
 				whiteboardImage.Show ();
 
 				timer.duration = trialState.Duration ();
 				if (trialState == TrialState.Cue || trialState == TrialState.Probe) {
+					stimulusName = selectedTexture.name;
 					recorder.StartRecording ();
 				}
 				timer.Start ();
