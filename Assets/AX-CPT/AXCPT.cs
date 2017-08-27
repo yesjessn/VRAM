@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Distractors;
 
@@ -17,15 +18,22 @@ namespace AXCPT {
 			this.probe = probe;
 		}
 
-		public bool CheckResponse (string buttonPressed) {
-			if (cue == TrialItem.A && probe == TrialItem.X) {
+		public bool CheckResponse (TrialState state, string buttonPressed) {
+			if (state == TrialState.ISI) {
 				if (buttonPressed == "Button1") {
 					return true;
 				} else {
 					return false;
 				}
 			}
-			if (buttonPressed == "Button2") {
+			if (cue == TrialItem.A && probe == TrialItem.X) {
+				if (buttonPressed == "Button2") {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (buttonPressed == "Button1") {
 				return true;
 			} else {
 				return false;
@@ -37,17 +45,24 @@ namespace AXCPT {
 		}
 	}
 
-	public enum TrialState { Starting, Instruction1, Instruction2, Instruction3, Instruction4, Instruction5, Ready, Cue, ISI, Probe, ITI, Correct, Incorrect, Slow, Ending };
+	public enum TrialState { Starting, Instruction1, Instruction2, Instruction3, Instruction4, Instruction5, Ready, PreCueITI, Cue, ISI, PreProbeITI, Probe, Correct, Incorrect, Slow, Ending };
 
 	public static class TrialStateExtensions {
 		public static float Duration(this TrialState state) {
 			switch (state) {
-			case TrialState.Cue:    return  1.0f;
-			case TrialState.ISI:    return  2.0f;
-			case TrialState.Probe: return  0.5f;
-			case TrialState.ITI:    return  1.2f;
-			default:                return -1.0f;
+			case TrialState.Cue:         return  1.0f;
+			case TrialState.ISI:         return  2.0f;
+			case TrialState.Probe:       return  0.5f;
+			case TrialState.PreCueITI:   return  1.2f;
+			case TrialState.PreProbeITI: return  1.2f;
+			default:                     return -1.0f;
 			}
+		}
+
+		public static bool isInstruction(this TrialState state) {
+			var beforeReady = state < TrialState.Ready;
+			var isPracticeFeedback = state == TrialState.Correct || state == TrialState.Incorrect || state == TrialState.Slow;
+			return beforeReady || isPracticeFeedback;
 		}
 
 		public static string Instructions(this TrialState state, Textures textures) {
@@ -59,6 +74,9 @@ namespace AXCPT {
 			case TrialState.Instruction4: return "<size=60>For all other\n pairs, press <b>2</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Instruction5: return "<size=60>You must respond\nbefore the next\npair appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Ready:        return "<size=60><b>Remember: <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.</b></size>\n\n<size=30><i>Press 1 to begin task.</i></size>";
+			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=1><i>Press any key to continue.</i></size>";
+			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\npair appears.</size>\n\n<size=1><i>Press any key to continue.</i></size>";
 			default:                      return "";
 			}
 		}
@@ -71,23 +89,26 @@ namespace AXCPT {
 			case TrialState.Instruction3: return TrialState.Instruction4;
 			case TrialState.Instruction4: return TrialState.Instruction5;
 			case TrialState.Instruction5: return TrialState.Ready;
-			case TrialState.Ready:        return TrialState.ITI;
+			case TrialState.Ready:        return TrialState.PreCueITI;
+			case TrialState.PreCueITI:    return TrialState.Cue;
 			case TrialState.Cue:          return TrialState.ISI;
 			case TrialState.ISI:          return TrialState.Probe;
-			case TrialState.Probe:       return TrialState.ITI;
-			case TrialState.ITI:          return TrialState.Cue;
-			case TrialState.Slow:         return TrialState.ITI;
+			case TrialState.PreProbeITI:  return TrialState.Probe;
+			case TrialState.Probe:        return TrialState.PreCueITI;
+			case TrialState.Slow:         return TrialState.PreCueITI;
+			case TrialState.Incorrect:    return TrialState.PreCueITI;
 			default:                      return TrialState.Ending;
 			}
 		}
 
 		public static Texture GetTexture(this TrialState state, TrialType type, Textures textures) {
 			switch (state) {
-			case TrialState.Cue:    return textures.Get(type.cue);
-			case TrialState.ISI:    return textures.isi;
-			case TrialState.Probe: return textures.Get(type.probe);
-			case TrialState.ITI:    return textures.iti;
-			default:                return null;
+			case TrialState.Cue:         return textures.Get(type.cue);
+			case TrialState.ISI:         return textures.isi;
+			case TrialState.Probe:       return textures.Get(type.probe);
+			case TrialState.PreCueITI:   return textures.iti;
+			case TrialState.PreProbeITI: return textures.iti;
+			default:                     return null;
 			}
 		}
 	}
@@ -128,8 +149,6 @@ namespace AXCPT {
 	}
 
 	public class AXCPT : MonoBehaviour {
-		public ShowText whiteboardText;
-		public ShowImage whiteboardImage;
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
@@ -140,9 +159,12 @@ namespace AXCPT {
 		private CountdownTimer timer;
 		private CSVWriter recordResults;
 		private string stimulusName;
+		private ShowText whiteboardText;
+		private ShowImage whiteboardImage;
+		private AXCPTPractice practice;
 
 		void Start () {
-			currentTrial = 0;
+			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
 			recordResults = new CSVWriter ("results.csv");
@@ -152,30 +174,31 @@ namespace AXCPT {
             whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
             whiteboardText.SetText (trialState.Instructions(textures));
 			whiteboardText.Show ();
+			practice = GetComponent<AXCPTPractice> ();
 		}
 
 		void Update () {
-			var finishInstructions = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
-			var finishState = (int)trialState >= (int)TrialState.Cue && (int)trialState <= (int)TrialState.ITI && timer.isComplete;
+			var finishReady = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
+			var finishInstructions = trialState.isInstruction() && Input.anyKeyDown;
+			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.Probe && timer.isComplete;
 
-			if (((int)trialState < (int)TrialState.Ready) && Input.anyKeyDown) {
-				trialState = trialState.Next ();
-				whiteboardText.SetText (trialState.Instructions(textures));
-				return;
-			} 
-			if (finishInstructions || finishState) {
-				whiteboardText.Hide ();
-				if (finishInstructions) {
+			if (finishInstructions || finishReady || finishState) {
+				if (finishReady) {
 					distractorController.gameObject.SetActive (true);
 				}
 
-				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.ITI)) {
-					var response = recorder.StopRecording ();
-					var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, stimulusName, response);
-					recordResults.WriteRow (output.ToString());
+				Option<TrialState> nextState = Option<TrialState>.CreateEmpty();
+				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.PreCueITI)) {
+					if (practice.enabled) {
+						nextState = practice.HandleStopRecording (trialState, recorder, trials.trialTypes [currentTrial]);
+					} else {
+						var response = recorder.StopRecording ();
+						var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, stimulusName, response);
+						recordResults.WriteRow (output.ToString ());
+					}
 				}
 
-				if (trialState == TrialState.ITI) {
+				if (trialState == TrialState.PreCueITI && nextState.Count () == 0) {
 					currentTrial++;
 					if (currentTrial == trials.trialTypes.Length) {
 						trialState = TrialState.Ending;
@@ -185,20 +208,47 @@ namespace AXCPT {
 						return;
 					}
 				}
-					
-				trialState = trialState.Next ();
-				print ("Starting state " + trialState);
 
-				var selectedTexture = trialState.GetTexture (trials.trialTypes [currentTrial], textures);
-				whiteboardImage.SetTexture(selectedTexture);
-				whiteboardImage.Show ();
-
-				timer.duration = trialState.Duration ();
-				if (trialState == TrialState.Cue || trialState == TrialState.Probe) {
-					stimulusName = selectedTexture.name;
-					recorder.StartRecording ();
+				if (nextState.Count() > 0) {
+					trialState = nextState.First ();
+					if (trialState != TrialState.Correct) {
+						// Repeat the current trial
+						currentTrial--;
+					}
+				} else {
+					if (trialState == TrialState.Correct) {
+						if (practice.previousState == TrialState.ISI) {
+							trialState = TrialState.PreProbeITI;
+						} else {
+							trialState = TrialState.PreCueITI;
+						}
+					} else {
+						trialState = trialState.Next ();
+					}
 				}
-				timer.Start ();
+				print ("Starting state " + trialState + " in trial number " + currentTrial);
+
+				var instruction = trialState.Instructions(textures);
+				if (instruction != "") {
+					whiteboardImage.Hide ();
+					whiteboardText.SetText (instruction);
+					whiteboardText.Show ();
+				} else {
+					whiteboardText.Hide ();
+					// currentTrial will be -1 on the first precueiti state when we need to show the iti texture
+					// in that case, using null is okay for trial type because the iti texture doesn't depend on the trial type.
+					var trialType = currentTrial == -1 ? null : trials.trialTypes [currentTrial];
+					var selectedTexture = trialState.GetTexture (trialType, textures);
+					whiteboardImage.SetTexture(selectedTexture);
+					whiteboardImage.Show ();
+
+					timer.duration = trialState.Duration ();
+					if (trialState == TrialState.Cue || trialState == TrialState.Probe) {
+						stimulusName = selectedTexture.name;
+						recorder.StartRecording ();
+					}
+					timer.Start ();
+				}
 			}
 
 		}

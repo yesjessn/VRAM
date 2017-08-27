@@ -19,10 +19,15 @@ namespace AXCPT {
 
 		public void LoadCategory(int index) {
 			var category = categories[index];
+			LoadCategoryByString (category);
+		}
+
+		public void LoadCategoryByString (string category) {
 			textures.a_group = LoadTextureGroup (category, TrialItem.A);
 			textures.b_group = LoadTextureGroup (category, TrialItem.B);
 			textures.x_group = LoadTextureGroup (category, TrialItem.X);
 			textures.y_group = LoadTextureGroup (category, TrialItem.Y);
+		
 		}
 
 		private Texture[] LoadTextureGroup(string category, TrialItem type) {

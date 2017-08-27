@@ -17,7 +17,6 @@ public class TaskSelector : MonoBehaviour {
 	public GameObject axcptMenu;
 	public GameObject mathMenu;
 	public GameObject axcptTask;
-	public GameObject axcptPractice;
 	public GameObject mathTask;
 	public GameObject verbalStroopTask;
     private GameObject _activeTask;
@@ -40,10 +39,15 @@ public class TaskSelector : MonoBehaviour {
 		case 0:
 			mainMenu.SetActive (false);
 			axcptMenu.SetActive (true);
+			axcptTask.GetComponent<AXCPTPractice>().enabled = false;
 			break;
 		case 1:
 			mainMenu.SetActive (false);
-			axcptPractice.SetActive (true);
+			CategoryLoader categoryloader = axcptTask.GetComponent (typeof(CategoryLoader)) as CategoryLoader;
+			categoryloader.LoadCategoryByString ("Shapes");
+			axcptTask.GetComponent<AXCPTPractice>().enabled = true;
+			_activeTask = axcptTask;
+			SceneManager.LoadScene("VRClassRoom");
 			break;
 		case 2:
 			mainMenu.SetActive (false);
