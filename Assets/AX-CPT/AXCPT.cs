@@ -77,6 +77,7 @@ namespace AXCPT {
 			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\npair appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
+			case TrialState.Ending:       return "<size=60>Note: in the\nreal task,\nyou will se\ndifferent objects\ninstead of shapes.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			default:                      return "";
 			}
 		}
