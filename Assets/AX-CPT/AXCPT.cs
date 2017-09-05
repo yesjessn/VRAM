@@ -164,6 +164,16 @@ namespace AXCPT {
 		private ShowImage whiteboardImage;
 		private AXCPTPractice practice;
 
+		private TrialList trialList {
+			get {
+				if (practice.enabled) {
+					return practice.trials;
+				} else {
+					return trials;
+				}
+			}
+		}
+
 		void Start () {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
@@ -191,17 +201,17 @@ namespace AXCPT {
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty();
 				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.PreCueITI)) {
 					if (practice.enabled) {
-						nextState = practice.HandleStopRecording (trialState, recorder, trials.trialTypes [currentTrial]);
+						nextState = practice.HandleStopRecording (trialState, recorder, trialList.trialTypes [currentTrial]);
 					} else {
 						var response = recorder.StopRecording ();
-						var output = new TrialOutput (currentTrial, trials.trialTypes [currentTrial], trialState, stimulusName, response);
+						var output = new TrialOutput (currentTrial, trialList.trialTypes [currentTrial], trialState, stimulusName, response);
 						recordResults.WriteRow (output.ToString ());
 					}
 				}
 
-				if (trialState == TrialState.PreCueITI && nextState.Count () == 0) {
+				if (trialState == TrialState.PreCueITI && nextState.Count() == 0) {
 					currentTrial++;
-					if (currentTrial == trials.trialTypes.Length) {
+					if (currentTrial == trialList.trialTypes.Length) {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
 						whiteboardImage.Hide ();
@@ -211,14 +221,14 @@ namespace AXCPT {
 				}
 
 				if (nextState.Count() > 0) {
-					trialState = nextState.First ();
+					trialState = nextState.First();
 					if (trialState != TrialState.Correct) {
 						// Repeat the current trial
 						currentTrial--;
 					}
 				} else {
 					if (trialState == TrialState.Correct) {
-						if (practice.previousState == TrialState.ISI) {
+						if (practice.PreviousState == TrialState.ISI) {
 							trialState = TrialState.PreProbeITI;
 						} else {
 							trialState = TrialState.PreCueITI;
@@ -238,7 +248,7 @@ namespace AXCPT {
 					whiteboardText.Hide ();
 					// currentTrial will be -1 on the first precueiti state when we need to show the iti texture
 					// in that case, using null is okay for trial type because the iti texture doesn't depend on the trial type.
-					var trialType = currentTrial == -1 ? null : trials.trialTypes [currentTrial];
+					var trialType = currentTrial == -1 ? null : trialList.trialTypes [currentTrial];
 					var selectedTexture = trialState.GetTexture (trialType, textures);
 					whiteboardImage.SetTexture(selectedTexture);
 					whiteboardImage.Show ();
@@ -251,7 +261,6 @@ namespace AXCPT {
 					timer.Start ();
 				}
 			}
-
 		}
 	}
 }

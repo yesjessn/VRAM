@@ -27,7 +27,6 @@ namespace AXCPT {
 			textures.b_group = LoadTextureGroup (category, TrialItem.B);
 			textures.x_group = LoadTextureGroup (category, TrialItem.X);
 			textures.y_group = LoadTextureGroup (category, TrialItem.Y);
-		
 		}
 
 		private Texture[] LoadTextureGroup(string category, TrialItem type) {

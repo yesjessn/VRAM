@@ -1,4 +1,3 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,13 +5,15 @@ using UnityEngine;
 namespace AXCPT {
 	public class AXCPTPractice : MonoBehaviour {
 		public TrialList trials;
-		public TrialState previousState;
+
+		private TrialState _previousState;
+		public TrialState PreviousState { get; }
 
 		void Start () {}
 
 		public Option<TrialState> HandleStopRecording(TrialState state, RecordResponses recorder, TrialType trialType) {
 			var response = recorder.StopRecording ();
-			previousState = state;
+			_previousState = state;
 			if (state == TrialState.ISI || state == TrialState.PreCueITI) {
 				if (response.Count == 0) {
 					return Option<TrialState>.Create(TrialState.Slow);
