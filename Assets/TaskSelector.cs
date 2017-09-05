@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using AXCPT;
 using Math;
+using VerbalStroop;
 
 public class TaskSelector : MonoBehaviour {
 
@@ -55,7 +56,11 @@ public class TaskSelector : MonoBehaviour {
 			break;
 		case 3:
 			mainMenu.SetActive (false);
-			//verbalStroopTask.SetActive (true);
+			verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = false;
+			_activeTask = verbalStroopTask;
+			SceneManager.LoadScene ("VRClassRoom");
+			break;
+		case 4:verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
 			_activeTask = verbalStroopTask;
 			SceneManager.LoadScene ("VRClassRoom");
 			break;
