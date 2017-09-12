@@ -29,8 +29,8 @@ namespace Math {
 		public static Texture GetTexture(this TrialState state, BlockType type, Textures textures) {
 			switch (state) {
 			case TrialState.Problem: return textures.Get(type);
-			case TrialState.ITI:    return textures.iti;
-			default:                return null;
+			case TrialState.ITI:     return textures.iti;
+			default:                 return null;
 			}
 		}
 	}
