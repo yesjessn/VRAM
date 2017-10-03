@@ -53,14 +53,21 @@ public class TaskSelector : MonoBehaviour {
 		case 2:
 			mainMenu.SetActive (false);
 			mathMenu.SetActive (true);
+			mathTask.GetComponent<MathPractice>().enabled = false;
 			break;
-		case 3:
+		case 3: 
+			mainMenu.SetActive (false);
+			mathTask.GetComponent<MathPractice>().enabled = true;
+			_activeTask = mathTask;
+			SceneManager.LoadScene ("VRClassRoom");
+			break;
+		case 4:
 			mainMenu.SetActive (false);
 			verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = false;
 			_activeTask = verbalStroopTask;
 			SceneManager.LoadScene ("VRClassRoom");
 			break;
-		case 4:verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
+		case 5:verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
 			_activeTask = verbalStroopTask;
 			SceneManager.LoadScene ("VRClassRoom");
 			break;

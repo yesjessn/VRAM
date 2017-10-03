@@ -26,4 +26,8 @@ public class ShowImage : MonoBehaviour {
 	public void SetTexture(Texture texture) {
 		img.texture = texture;
 	}
+
+	public Texture GetTexture () {
+		return img.texture;
+	}
 }
