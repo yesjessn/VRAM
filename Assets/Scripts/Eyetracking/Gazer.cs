@@ -1,20 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
 using SMI;
+
 namespace SMI
 {
     public class Gazer : GazeAction
     {
         //public GameObject hitObject;
-        public string objectNameOverride = "";
-        public string distractionType = "";
+        private string objectNameOverride = "";
+        private string distractionType = "";
         public bool timing = false;
         public float timer = 0.0f;
+
         // Use this for initialization
         public override void Start()
         {
             
         }
+
+		public void SetDistractionParams(string distractionType, string distractionName) {
+			this.distractionType = distractionType;
+			this.objectNameOverride = distractionName;
+		}
 
         public override void OnGazeEnter(RaycastHit hitInformation)
         {

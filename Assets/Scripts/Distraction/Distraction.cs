@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SMI;
 
-namespace SMI
-{
-    public class Distraction : MonoBehaviour
-    {
-        public enum DistractionTypes{ Audio, Visual, AudioVisual};
+namespace Distraction {
+	public enum DistractionTypes{ Audio, Visual, AudioVisual};
+
+    public class Distraction : MonoBehaviour {
         [SerializeField]
         private AudioSource soundSource;
         [SerializeField]
@@ -20,91 +20,78 @@ namespace SMI
         private Gazer gazer;
         [SerializeField]
         private Gazer gazerToModify;
-        public DistractionTypes distractionType = DistractionTypes.Audio;
+
         public float volume = 0.5f;
-        public string animTriggerName = "Loop1";
+        public string animTriggerName;
+		public string distractionName;
 
         private Queue<Action> _actionQueue = new Queue<Action>();
-        private Action _savedAction = null;
 
-        // Use this for initialization
-        void Start()
-        {
+		private DistractionTypes distractionType {
+			get {
+				if (soundClip != null && animTriggerName != "") {
+					return DistractionTypes.AudioVisual;
+				} else if (soundClip != null) {
+					return DistractionTypes.Audio;
+				} else {
+					return DistractionTypes.Visual;
+				}
+			}
+		}
 
+        void Start() { }
+
+        public void TriggerDistraction(Action callback) {
+			activateCollider ();
+			updateGazer ();
+			var animDuration = triggerAnimation ();
+			var soundDuration = playSound ();
+			var maxDuration = System.Math.Max (animDuration, soundDuration);
+			setupOnComplete (callback, maxDuration);
         }
 
-        public void TriggerDistraction(Action callback)
-        {
-            if(callback != null)
-            {
-                _savedAction = callback;
-            }
+		private void activateCollider() {
+			distractionCollider.gameObject.SetActive(true);
+		}
 
-            switch(distractionType)
-            {
-                case DistractionTypes.Audio:
-                    TriggerAudioDistraction();
-                    break;
-                case DistractionTypes.Visual:
-                    TriggerVisualDistraction();
-                    break;
-                case DistractionTypes.AudioVisual:
-                    TriggerAudioVisualDistraction();
-                    break;
-            }
-        }
+		private void updateGazer() {
+			gazer.SetDistractionParams (distractionType.ToString (), distractionName);
+			if (gazerToModify != null) {
+				gazerToModify.gazeParent = gazer;
+			}
+		}
 
-        private void TriggerAudioDistraction()
-        {
-            gazer.distractionType = "Audio";
-            distractionCollider.gameObject.SetActive(true);
-            if(animator != null)
-            {
-                animator.SetTrigger(animTriggerName);
-            }
-            //----Volume scales from 0 - 1, but can be > 1. If so it might distort the sound----//
-            soundSource.PlayOneShot(soundClip,volume);
-            StartCoroutine(WaitForToFinish(soundClip.length));
-        }
+		private float playSound() {
+			if (distractionType == DistractionTypes.Audio || distractionType == DistractionTypes.AudioVisual) {
+				soundSource.PlayOneShot (soundClip, volume);
+				return soundClip.length;
+			}
+			return 0;
+		}
 
-        private void TriggerVisualDistraction()
-        {
-            distractionCollider.gameObject.SetActive(true);
-            if(gazerToModify != null)
-                gazerToModify.gazeParent = gazer;
-            gazer.distractionType = "Visual";
-            animator.SetTrigger(animTriggerName);
-            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
-            float clipLength = state.length;
-            StartCoroutine(WaitForToFinish(clipLength));
-        }
+		private float triggerAnimation() {
+			if (distractionType == DistractionTypes.Visual || distractionType == DistractionTypes.AudioVisual || animator != null) {
+				animator.SetTrigger(animTriggerName);
+				AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+				return state.length;
+			}
+			return 0;
+		}
 
-        private void TriggerAudioVisualDistraction()
-        {
-            distractionCollider.gameObject.SetActive(true);
-            if (gazerToModify != null)
-                gazerToModify.gazeParent = gazer;
-            gazer.distractionType = "AudioVisual";
-            animator.SetTrigger(animTriggerName);
-            //----Volume scales from 0 - 1, but can be > 1. If so it might distort the sound----//
-            soundSource.PlayOneShot(soundClip, volume);
-            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
-            float clipLength = state.length;
-            StartCoroutine(WaitForToFinish(clipLength));
-        }
+		private void setupOnComplete(Action callback, float duration) {
+			if (callback != null) {
+				StartCoroutine (WaitForToFinish (callback, duration));
+			}
+		}
 
-        IEnumerator WaitForToFinish(float waitDuration)
-        {
+		IEnumerator WaitForToFinish(Action callback, float waitDuration) {
             yield return new WaitForSeconds(waitDuration);
-            if(_savedAction != null)
-                _actionQueue.Enqueue(_savedAction);
+			_actionQueue.Enqueue(callback);
         }
 
         // Update is called once per frame
-        void Update()
-        {
-            if(_actionQueue.Count > 0)
-            {
+        void Update() {
+            if(_actionQueue.Count > 0) {
                 Action a = _actionQueue.Dequeue();
                 a();
             }
