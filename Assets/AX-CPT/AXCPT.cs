@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Distractors;
+using Distraction;
+using System.IO;
+
 
 namespace AXCPT {
 	public enum TrialItem {A, B, X, Y};
@@ -153,7 +155,7 @@ namespace AXCPT {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
-		public DistractorController distractorController;
+		public DistractionController distractionController;
 
 		private int currentTrial;
 		private TrialState trialState;
@@ -163,6 +165,7 @@ namespace AXCPT {
 		private ShowText whiteboardText;
 		private ShowImage whiteboardImage;
 		private AXCPTPractice practice;
+		private InputBroker input;
 
 		private TrialList trialList {
 			get {
@@ -175,10 +178,19 @@ namespace AXCPT {
 		}
 
 		void Start () {
+			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
-			recordResults = new CSVWriter ("results.csv");
+			string desktop = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+			desktop = Path.Combine(desktop, "OutputLogs");
+			//UnityEngine.Windows
+			if(!Directory.Exists(desktop))
+			{
+				Directory.CreateDirectory(desktop);
+			}
+			var filepath = Path.Combine(desktop, "axcpt_results.csv");
+			recordResults = new CSVWriter (filepath);
 			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,stimulus_name,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
@@ -189,13 +201,13 @@ namespace AXCPT {
 		}
 
 		void Update () {
-			var finishReady = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
-			var finishInstructions = trialState.isInstruction() && Input.anyKeyDown;
+			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
+			var finishInstructions = trialState.isInstruction() && input.GetButtonDown ("Button1");
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.Probe && timer.isComplete;
 
 			if (finishInstructions || finishReady || finishState) {
 				if (finishReady) {
-					distractorController.gameObject.SetActive (true);
+					distractionController.gameObject.SetActive (true);
 				}
 
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty();
@@ -215,7 +227,7 @@ namespace AXCPT {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
 						whiteboardImage.Hide ();
-						distractorController.gameObject.SetActive (false);
+						distractionController.gameObject.SetActive (false);
 						return;
 					}
 				}

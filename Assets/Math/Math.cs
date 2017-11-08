@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Distractors;
+using Distraction;
 using System.Linq;
 
 namespace Math {
@@ -104,7 +104,7 @@ namespace Math {
         public ShowText whiteboardText;
         public Textures textures;
 		public RecordResponses recorder;
-		public DistractorController distractorController;
+		public DistractionController distractionController;
 
 		private TrialState trialState;
 		private int currentTrial;
@@ -146,7 +146,7 @@ namespace Math {
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && trialTimer.isComplete;
 
 			if (finishReady) {
-				distractorController.gameObject.SetActive (true);
+				distractionController.gameObject.SetActive (true);
 			}
 
 			if (trialState != TrialState.Ending) {
@@ -157,7 +157,7 @@ namespace Math {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
 						whiteboard.Hide ();
-						distractorController.gameObject.SetActive (false);
+						distractionController.gameObject.SetActive (false);
 						return;
 					}
 					switch (type) {

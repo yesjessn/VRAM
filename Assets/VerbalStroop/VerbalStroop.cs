@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Distractors;
+using Distraction;
 using System.Linq;
 
 namespace VerbalStroop {
@@ -135,7 +135,7 @@ namespace VerbalStroop {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
-		public DistractorController distractorController;
+		public DistractionController distractionController;
 
 		private int currentTrial;
 		private TrialState trialState;
@@ -176,7 +176,7 @@ namespace VerbalStroop {
 
 			if (finishInstructions || finishReady || finishState) {
 				if (finishReady) {
-					distractorController.gameObject.SetActive (true);
+					distractionController.gameObject.SetActive (true);
 				}
 
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty(); 
@@ -195,7 +195,7 @@ namespace VerbalStroop {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
 						whiteboardImage.Hide ();
-						distractorController.gameObject.SetActive (false);
+						distractionController.gameObject.SetActive (false);
 						return;
 					}
 				} 
