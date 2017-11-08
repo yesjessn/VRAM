@@ -25,12 +25,15 @@ public class RecordResponses : MonoBehaviour {
 	private float recordingStartTime;
 	private List<Response> response;
 
+	private InputBroker input;
+
 	public bool isRecording { get { return recording; } }
 	public bool hasResponse { get { return response != null; } }
 
 	void Start () {
 		recording = false;
 		response = new List<Response> ();
+		input = (InputBroker)FindObjectOfType(typeof(InputBroker));
 	}
 
 	public void StartRecording() {
@@ -51,7 +54,7 @@ public class RecordResponses : MonoBehaviour {
 	void Update () {
 		if (recording) {
 			foreach (string button in buttons) {
-				if (Input.GetButtonDown (button)) {
+				if (input.GetButtonDown (button)) {
 					var responseTime = Time.time - recordingStartTime;
 					response.Add (new Response (button, responseTime));
 					break;
