@@ -1,34 +1,79 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SMI
-{
-    public class DistractionController : MonoBehaviour
-    {
+namespace Distraction {
+	public enum TimerState {Starting, Waiting, Cooldown}
 
-        [SerializeField]
-        public List<Distraction> distractors = new List<Distraction>();
+	public static class TimerStateExtensions {
+		public static float Duration(this TimerState state) {
+			switch (state) {
+			case TimerState.Waiting:  return Random.Range(0f, 40f);
+			case TimerState.Cooldown: return 20f;
+			default:                  return -1f;
+			}
+		}
 
-        // Use this for initialization
-        void Start()
-        {
+		public static TimerState Next (this TimerState state) {
+			switch (state) {
+			case TimerState.Starting: return TimerState.Waiting;
+			case TimerState.Waiting:  return TimerState.Cooldown;
+			case TimerState.Cooldown: return TimerState.Waiting;
+			default:                  return TimerState.Starting;
+			}
+		}
+	}
 
-        }
+	public class DistractionController : MonoBehaviour {
+		private TimerState timerState;
+		private CountdownTimer timer;
+		private CSVWriter recordDistractors;
 
-        void DistractorCallback()
-        {
-            Debug.Log("------------------------Finished Distraction----------------------");
-        }
+		private Distraction[] distractions;
 
-        // Update is called once per frame
-        void Update()
-        {
-            if (Input.GetKeyDown(UnityEngine.KeyCode.D))
-            {
-                distractors[3].TriggerDistraction(DistractorCallback);
-            }
-        }
-    }
+		void Awake () {
+			distractions = FindObjectsOfType (typeof(Distraction)) as Distraction[];
+		}
+
+		// Use this for initialization
+		void Start () {
+			timerState = TimerState.Starting;
+			timer = new CountdownTimer (-1);
+			recordDistractors = new CSVWriter ("distractors.csv");
+			recordDistractors.WriteRow ("time,distractor");
+			recordDistractors.WriteRow(Time.time + ",Start");
+
+			List<string> ds = new List<string>();
+			foreach (Distraction d in distractions) {
+				ds.Add(d.distractionName);
+			}
+			print ("Found distractors:" + string.Join(", ", ds.ToArray()));
+		}
+
+		// Update is called once per frame
+		void Update () {
+//			if (Input.GetButtonDown("Button2")) {
+//				var d = distractions [Random.Range (0, distractions.Length)];
+//				print ("Playing distractor: " + d.distractionName);
+//				d.TriggerDistraction (null);
+//				return;
+//			}
+
+			if (timer.isComplete) {
+				if (timerState == TimerState.Waiting) {
+					var d = distractions [Random.Range (0, distractions.Length)];
+					print ("Playing distractor: " + d.distractionName);
+					recordDistractors.WriteRow(Time.time + "," + d.distractionName);
+					d.TriggerDistraction (null);
+				}
+				timerState = timerState.Next ();
+				timer.duration = timerState.Duration ();
+				timer.Start ();
+			}
+		}
+
+		void OnDisable () {
+			recordDistractors.Close ();
+		}
+	}
 }
