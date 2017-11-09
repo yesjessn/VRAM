@@ -41,7 +41,7 @@ public class MasterDataController : MonoBehaviour {
             instance = this;
         }
 
-        TaskSelector.instance.ActivateActiveTask();
+        //TaskSelector.instance.ActivateActiveTask();
     }
 
    // Use this for initialization
