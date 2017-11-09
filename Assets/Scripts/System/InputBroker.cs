@@ -15,6 +15,8 @@ public class InputBroker : MonoBehaviour {
 	}
 
 	public bool GetButtonDown(string button) {
-		return Input.GetButtonDown(button) || forcedKeys.Contains(button);
+		var inputdown = Input.GetButtonDown (button);
+		var forceddown = forcedKeys.Contains(button);
+		return inputdown || forceddown;
 	}
 }
