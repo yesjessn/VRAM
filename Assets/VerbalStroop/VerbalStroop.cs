@@ -138,12 +138,14 @@ namespace VerbalStroop {
 		public DistractionController distractionController;
 
 		private int currentTrial;
+		private AvatarController avatar;
 		private TrialState trialState;
 		private CountdownTimer timer;
 		private CSVWriter recordResults;
 		private ShowText whiteboardText;
 		private ShowImage whiteboardImage;
 		private VerbalStroopPractice practice;
+		private InputBroker input;
 
 		private TrialList trialList {
 			get {
@@ -156,6 +158,8 @@ namespace VerbalStroop {
 		}
 
 		void Start () {
+			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
+			avatar = GetComponent<AvatarController> ();
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			this.timer = new CountdownTimer (-1);
@@ -170,8 +174,8 @@ namespace VerbalStroop {
 		}
 
 		void Update () {
-			var finishReady = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
-			var finishInstructions = trialState.isInstruction() && Input.anyKeyDown;
+			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
+			var finishInstructions = trialState.isInstruction() && input.GetButtonDown ("Button1");
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && timer.isComplete;
 
 			if (finishInstructions || finishReady || finishState) {
@@ -223,6 +227,7 @@ namespace VerbalStroop {
 					var trialProperties = currentTrial == -1 ? null : trialList.trialProperties [currentTrial];
 					switch (trialState) {
 					case TrialState.Word:
+						avatar.Play (trialList.trialProperties [currentTrial].sound);
 						whiteboardText.SetText (trialList.trialProperties [currentTrial].text.ToString ());
 						whiteboardText.SetColor (trialList.trialProperties [currentTrial].color.GetColor ());
 						whiteboardImage.Hide ();

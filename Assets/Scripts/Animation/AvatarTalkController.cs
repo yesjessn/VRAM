@@ -129,10 +129,10 @@ public class AvatarTalkController : MonoBehaviour {
 			}
 		}
 
-        if (Input.GetKeyDown(UnityEngine.KeyCode.R))
-        {
-            PlayClipWithAnimation(overrideAudioClip,"Red",null);
-        }
+//        if (Input.GetKeyDown(UnityEngine.KeyCode.R))
+//        {
+//            PlayClipWithAnimation(overrideAudioClip,"Red",null);
+//        }
 
         /*if(runAnimationTimer)
 		{

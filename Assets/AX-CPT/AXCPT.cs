@@ -202,7 +202,7 @@ namespace AXCPT {
 
 		void Update () {
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
-			var finishInstructions = trialState.isInstruction() && input.GetButtonDown ("Button1");
+			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.Probe && timer.isComplete;
 
 			if (finishInstructions || finishReady || finishState) {

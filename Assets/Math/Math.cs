@@ -27,8 +27,8 @@ namespace Math {
 
 		public static string Instructions(this TrialState state){
 			switch (state) {
-			case TrialState.Starting:     return "<size=60>Verbal Stroop\nTask</size>\n\n<size=30><i>Please press any key to continue.</i></size>";
-			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na word written\nin a color.\nThe word and\ncolor will change\neach trial.\n\n</size><size=30><i>Press any key to continue.</i></size>";
+			case TrialState.Starting:     return "<size=60>Math\nTask</size>\n\n<size=30><i>Please press any key to continue.</i></size>";
+			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na math problem.\n\n</size><size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Instruction2: return "<size=60>Additionally, you will\nhear the teacher\nsay a color.\n\n</size><size=30><i>Press any key to continue.</i></size>";
 			//case TrialState.Instruction3: return "<size=60>Your goal is\nto let the\nteacher know if\nshe read the\nink color correctly.</size>\n\n<size=30><i>Press any key to continue.</i></size>";	
 			//case TrialState.Instruction4: return "<size=60>If she is\ncorrect press <b>1</b>.\nIf she is\nincorrect press <b>2</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
@@ -100,12 +100,12 @@ namespace Math {
 		const int NumberOfBlocks = 6;
 		const float BlockTime = 3 * 60.0f;
 
-		public ShowImage whiteboard;
-        public ShowText whiteboardText;
         public Textures textures;
 		public RecordResponses recorder;
 		public DistractionController distractionController;
 
+		private ShowImage whiteboard;
+		private ShowText whiteboardText;
 		private TrialState trialState;
 		private int currentTrial;
 		private BlockType type;
@@ -114,6 +114,7 @@ namespace Math {
 		private CountdownTimer blockTimer;
 		private CSVWriter recordResults;
 		private MathPractice practice;
+		private InputBroker input;
 
 		private Textures mathTextures {
 			get {
@@ -126,6 +127,7 @@ namespace Math {
 		}
 
 		void Start () {
+			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			currentBlock = 0;
 			type = BlockType.Easy;
@@ -141,8 +143,8 @@ namespace Math {
 		}
 
 		void Update () {
-			var finishReady = trialState == TrialState.Ready && Input.GetButtonDown ("Button1");
-			var finishInstructions = trialState.isInstruction() && Input.anyKeyDown;
+			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
+			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && trialTimer.isComplete;
 
 			if (finishReady) {
