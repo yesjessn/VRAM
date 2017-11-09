@@ -61,10 +61,12 @@ namespace Distraction {
 
 			if (timer.isComplete) {
 				if (timerState == TimerState.Waiting) {
-					var d = distractions [Random.Range (0, distractions.Length)];
-					print ("Playing distractor: " + d.distractionName);
-					recordDistractors.WriteRow(Time.time + "," + d.distractionName);
-					d.TriggerDistraction (null);
+					if (distractions.Length > 0) {
+						var d = distractions [Random.Range (0, distractions.Length)];
+						print ("Playing distractor: " + d.distractionName);
+						recordDistractors.WriteRow (Time.time + "," + d.distractionName);
+						d.TriggerDistraction (null);
+					}
 				}
 				timerState = timerState.Next ();
 				timer.duration = timerState.Duration ();
