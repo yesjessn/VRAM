@@ -8,12 +8,12 @@ using System.Linq;
 namespace Math {
 	public enum BlockType {Easy, Medium};
 
-	public enum TrialState { Starting, Instruction1, Instruction2, Ready, Problem, ITI, Correct, Incorrect, Slow, Ending };
+	public enum TrialState { Starting, Instruction1, Ready, Problem, ITI, Correct, Incorrect, Slow, Ending };
 
 	public static class TrialStateExtensions {
 		public static float Duration(this TrialState state) {
 			switch (state) {
-			case TrialState.Problem: return 10.0f;
+			case TrialState.Problem: return 30.0f;
 			case TrialState.ITI:     return  2.0f;
 			default:                 return -1.0f;
 			}
@@ -29,11 +29,7 @@ namespace Math {
 			switch (state) {
 			case TrialState.Starting:     return "<size=60>Math\nTask</size>\n\n<size=30><i>Please press any key to continue.</i></size>";
 			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na math problem.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction2: return "<size=60>Additionally, you will\nhear the teacher\nsay a color.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			//case TrialState.Instruction3: return "<size=60>Your goal is\nto let the\nteacher know if\nshe read the\nink color correctly.</size>\n\n<size=30><i>Press any key to continue.</i></size>";	
-			//case TrialState.Instruction4: return "<size=60>If she is\ncorrect press <b>1</b>.\nIf she is\nincorrect press <b>2</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			//case TrialState.Instruction5: return "<size=60>You must respond\nbefore the next\nword appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Ready:        return "<size=60><b>Remember:\npress 1 if\nshe is correct\nand press 2 if\nshe is incorrect.</b></size>\n\n<size=30><b>Press 1 to begin task.</b></size>";
+			case TrialState.Ready:        return "<size=60><b>You only have\n30 seconds to\ncomplete the\nproblem before\nthe next\nquestion appears.</b></size>\n\n<size=30><b>Press 1 to begin task.</b></size>";
 			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\nword appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
@@ -44,8 +40,7 @@ namespace Math {
 		public static TrialState Next(this TrialState state) {
 			switch (state) {
 			case TrialState.Starting:     return TrialState.Instruction1;
-			case TrialState.Instruction1: return TrialState.Instruction2;
-			case TrialState.Instruction2: return TrialState.Ready;
+			case TrialState.Instruction1: return TrialState.Ready;
 			case TrialState.Ready:        return TrialState.ITI;
 			case TrialState.Problem:      return TrialState.ITI;
 			case TrialState.ITI:          return TrialState.Problem;
@@ -104,7 +99,7 @@ namespace Math {
 		public RecordResponses recorder;
 		public DistractionController distractionController;
 
-		private ShowImage whiteboard;
+		private ShowImage whiteboardImage;
 		private ShowText whiteboardText;
 		private TrialState trialState;
 		private int currentTrial;
@@ -135,7 +130,9 @@ namespace Math {
 			trialTimer = new CountdownTimer (-1);
 			blockTimer = new CountdownTimer (BlockTime);
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
-            whiteboard = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
+			whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
+			whiteboardText.SetText (trialState.Instructions());
+			whiteboardText.Show ();
             recordResults = new CSVWriter ("math_results.csv");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
 			print ("Starting Math");
@@ -147,69 +144,71 @@ namespace Math {
 			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && trialTimer.isComplete;
 
-			if (finishReady) {
-				distractionController.gameObject.SetActive (true);
-			}
-
-			if (trialState != TrialState.Ending) {
-				var blockComplete = blockTimer.isComplete;
-				if (blockComplete) {
-					currentBlock++;
-					if (currentBlock == NumberOfBlocks) {
-						trialState = TrialState.Ending;
-						recordResults.Close ();
-						whiteboard.Hide ();
-						distractionController.gameObject.SetActive (false);
-						return;
-					}
-					switch (type) {
-					case BlockType.Easy:
-						type = BlockType.Medium;
-						break;
-					case BlockType.Medium:
-						type = BlockType.Easy;
-						break;
-					}
-					blockTimer.Start ();
+			if (finishInstructions || finishReady || finishState) {
+				if (finishReady) {
+					distractionController.gameObject.SetActive (true);
 				}
+
+				if (trialState != TrialState.Ending) {
+					var blockComplete = blockTimer.isComplete;
+					if (blockComplete) {
+						currentBlock++;
+						if (currentBlock == NumberOfBlocks) {
+							trialState = TrialState.Ending;
+							recordResults.Close ();
+							whiteboardImage.Hide ();
+							distractionController.gameObject.SetActive (false);
+							return;
+						}
+						switch (type) {
+						case BlockType.Easy:
+							type = BlockType.Medium;
+							break;
+						case BlockType.Medium:
+							type = BlockType.Easy;
+							break;
+						}
+						blockTimer.Start ();
+					}
 					
-				Option<TrialState> nextState = Option<TrialState>.CreateEmpty(); 
-				if (trialTimer.isComplete || blockComplete || recorder.hasResponse) {
-					if (trialState == TrialState.Problem) {
-						if (practice.enabled) {
-							nextState = practice.HandleStopRecording (trialState, recorder, whiteboard.GetTexture());
-						} else {
-							var response = recorder.StopRecording ();
-							var output = new TrialOutput (currentTrial, currentBlock, type, response);
-							recordResults.WriteRow (output.ToString ());
-						}
-					}
-					if (nextState.Count () > 0) {
-						trialState = nextState.First ();
-						if (trialState != TrialState.Correct) {
-							currentTrial--;
-						}
-					} else {
-						trialState = trialState.Next ();
-					}
-					print ("Starting state " + trialState);
-
-					var instruction = trialState.Instructions();
-					if (instruction != "") {
-						whiteboard.Hide ();
-						whiteboardText.SetText (instruction);
-						whiteboardText.Show ();
-					} else {
-						whiteboardText.Hide ();
-						whiteboard.SetTexture(trialState.GetTexture(type, mathTextures));
-						whiteboard.Show ();
-
-						trialTimer.duration = trialState.Duration ();
+					Option<TrialState> nextState = Option<TrialState>.CreateEmpty (); 
+					if (trialTimer.isComplete || blockComplete || recorder.hasResponse) {
 						if (trialState == TrialState.Problem) {
-							currentTrial++;
-							recorder.StartRecording ();
+							if (practice.enabled) {
+								nextState = practice.HandleStopRecording (trialState, recorder, whiteboardImage.GetTexture ());
+							} else {
+								var response = recorder.StopRecording ();
+								var output = new TrialOutput (currentTrial, currentBlock, type, response);
+								recordResults.WriteRow (output.ToString ());
+							}
 						}
-						trialTimer.Start ();
+						if (nextState.Count () > 0) {
+							trialState = nextState.First ();
+							if (trialState != TrialState.Correct) {
+								currentTrial--;
+							}
+						} else {
+							trialState = trialState.Next ();
+						}
+						print ("Starting state " + trialState);
+
+						var instruction = trialState.Instructions ();
+						if (instruction != "") {
+							whiteboardImage.Hide ();
+							whiteboardText.SetText (instruction);
+							whiteboardText.Show ();
+						} else {
+							whiteboardText.Hide ();
+							whiteboardImage.SetTexture (trialState.GetTexture (type, mathTextures));
+							whiteboardImage.Show ();
+
+							trialTimer.duration = trialState.Duration ();
+							if (trialState == TrialState.Problem) {
+								currentTrial++;
+								recorder.StartRecording ();
+							}
+							trialTimer.Start ();
+						}
 					}
 				}
 			}

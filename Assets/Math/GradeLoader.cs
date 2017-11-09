@@ -16,7 +16,11 @@ namespace Math {
 		}
 
 		public void LoadGrade(int grade) {
-			textures.easy_group = LoadTextureGroup (grade - 2);
+			List<Texture> listOfEasyGrades = new List<Texture> ();
+			for (int i = 1; i < grade; i++) {
+				listOfEasyGrades.AddRange (LoadTextureGroup (i));
+			}
+			textures.easy_group = listOfEasyGrades.ToArray ();
 			textures.medium_group = LoadTextureGroup (grade);
 		}
 
