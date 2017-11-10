@@ -172,6 +172,7 @@ namespace Math {
 					}
 					
 					Option<TrialState> nextState = Option<TrialState>.CreateEmpty ();
+					if (blockComplete || finishState || finishInstructions || finishReady) {
 						if (trialState == TrialState.Problem) {
 							if (practice.enabled) {
 								nextState = practice.HandleStopRecording (trialState, recorder, whiteboardImage.GetTexture ());
