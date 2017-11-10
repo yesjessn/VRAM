@@ -142,7 +142,7 @@ namespace Math {
 		void Update () {
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
 			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
-			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && trialTimer.isComplete;
+			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && (trialTimer.isComplete || recorder.hasResponse);
 
 			if (finishInstructions || finishReady || finishState) {
 				if (finishReady) {
@@ -171,8 +171,7 @@ namespace Math {
 						blockTimer.Start ();
 					}
 					
-					Option<TrialState> nextState = Option<TrialState>.CreateEmpty (); 
-					if (trialTimer.isComplete || blockComplete || recorder.hasResponse) {
+					Option<TrialState> nextState = Option<TrialState>.CreateEmpty ();
 						if (trialState == TrialState.Problem) {
 							if (practice.enabled) {
 								nextState = practice.HandleStopRecording (trialState, recorder, whiteboardImage.GetTexture ());

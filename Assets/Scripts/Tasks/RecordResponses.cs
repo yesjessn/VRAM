@@ -28,7 +28,7 @@ public class RecordResponses : MonoBehaviour {
 	private InputBroker input;
 
 	public bool isRecording { get { return recording; } }
-	public bool hasResponse { get { return response != null; } }
+	public bool hasResponse { get { return recording && response != null && response.Count > 0; } }
 
 	void Start () {
 		recording = false;
