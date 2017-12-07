@@ -40,11 +40,11 @@ public class RecordResponses : MonoBehaviour {
 		recording = true;
 		recordingStartTime = Time.time;
 		response.Clear();
-		print ("starting recording");
+		//print ("starting recording");
 	}
 
 	public List<Response> StopRecording() {
-		print ("stopping recording");
+		//print ("stopping recording");
 		recording = false;
 		return response;
 

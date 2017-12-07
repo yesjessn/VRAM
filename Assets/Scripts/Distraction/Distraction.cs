@@ -47,6 +47,7 @@ namespace Distraction {
 			var animDuration = triggerAnimation ();
 			var soundDuration = playSound ();
 			var maxDuration = System.Math.Max (animDuration, soundDuration);
+			print("Starting distraction: " + distractionName);
 			setupOnComplete (callback, maxDuration);
         }
 

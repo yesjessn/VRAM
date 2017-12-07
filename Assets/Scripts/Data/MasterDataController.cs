@@ -212,12 +212,23 @@ public class MasterDataController : MonoBehaviour {
 
                 entryToWrite = tempDateTime.ToString("MM/dd/yyyy hh:mm:ss.fffff") + DELIM + timeSinceStart +
                     DELIM + "\"" + playerHeadPosition + "\"" +
-                    DELIM + "\"" + playerRotation + "\"" + DELIM + "\"" + binocularPor + "\"" +
-                    DELIM + "\"" + cameraRaycast + "\"" + DELIM + ipd + DELIM + "\"" + leftPor + "\"" +
-                    DELIM + "\"" + rightPor + "\"" + DELIM + "\"" + leftBasePoint + "\"" +
-                    DELIM + "\"" + rightBasePoint + "\"" + DELIM + "\"" + leftGazeDirection + "\"" +
-                    DELIM + "\"" + rightGazeDirection + "\"" + DELIM + "\"" + gazePoint + "\"" +
-                    DELIM + "Standard" + DELIM + "" + DELIM + "" + DELIM + gazeObjectName + DELIM + distanceToObject + DELIM + dataPoints;
+                    DELIM + "\"" + playerRotation + "\"" + 
+                    DELIM + "\"" + binocularPor + "\"" +
+                    DELIM + "\"" + cameraRaycast + "\"" + 
+                    DELIM + ipd + 
+                    DELIM + "\"" + leftPor + "\"" +
+                    DELIM + "\"" + rightPor + "\"" + 
+                    DELIM + "\"" + leftBasePoint + "\"" +
+                    DELIM + "\"" + rightBasePoint + "\"" + 
+                    DELIM + "\"" + leftGazeDirection + "\"" +
+                    DELIM + "\"" + rightGazeDirection + "\"" + 
+                    DELIM + "\"" + gazePoint + "\"" +
+                    DELIM + "Standard" + 
+                    DELIM + "" + 
+                    DELIM + "" + 
+                    DELIM + gazeObjectName + 
+                    DELIM + distanceToObject + 
+                    DELIM + dataPoints;
                 //Debug.Log(entryToWrite);
                 dataPoints++;
             }

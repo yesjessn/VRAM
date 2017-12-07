@@ -133,7 +133,7 @@ namespace Math {
 			whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
 			whiteboardText.SetText (trialState.Instructions());
 			whiteboardText.Show ();
-            recordResults = new CSVWriter ("math_results.csv");
+			recordResults = CSVWriter.NewOutputFile("math_results");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
 			print ("Starting Math");
 			practice = GetComponent<MathPractice> ();
@@ -190,7 +190,7 @@ namespace Math {
 						} else {
 							trialState = trialState.Next ();
 						}
-						print ("Starting state " + trialState);
+						//print ("Starting state " + trialState);
 
 						var instruction = trialState.Instructions ();
 						if (instruction != "") {

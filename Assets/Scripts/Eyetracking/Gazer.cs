@@ -12,10 +12,44 @@ namespace SMI
         public bool timing = false;
         public float timer = 0.0f;
 
+        private EyeTrackingData dataWriter;
+
         // Use this for initialization
-        public override void Start()
-        {
-            
+        public override void Start() {
+        }
+
+        private EyeTrackingData getEyeTracker() {
+            if (this.dataWriter == null) {
+                var eyeTrackingData = GameObject.Find("DistractionController");
+                if (eyeTrackingData != null) {
+                    this.dataWriter = eyeTrackingData.GetComponent(typeof(EyeTrackingData)) as EyeTrackingData;
+                }
+            }
+            return dataWriter;
+        }
+
+        private void addDataEvent(EyeTrackingData.Event e) {
+            var writer = getEyeTracker();
+            if (writer == null) {
+                return;
+            }
+            writer.AddEvent(e);
+        }
+
+        private void setHitObject(GameObject obj) {
+            var writer = getEyeTracker();
+            if (writer == null) {
+                return;
+            }
+            writer.hitObject = obj;
+        }
+
+        private void clearHitObject() {
+            var writer = getEyeTracker();
+            if (writer == null) {
+                return;
+            }
+            writer.hitObject = null;
         }
 
 		public void SetDistractionParams(string distractionType, string distractionName) {
@@ -30,19 +64,22 @@ namespace SMI
             {
                 gazeParent.OnGazeEnter(hitInformation);
                 isGazed = true;
-               // MasterDataController.instance.hitObject = hitInformation.transform.gameObject;
+               MasterDataController.instance.hitObject = hitInformation.transform.gameObject;
             }
             else
             {
                 isGazed = true;
                 MasterDataController.instance.hitObject = this.transform.gameObject;
+                setHitObject(this.transform.gameObject);
                 if(string.IsNullOrEmpty(distractionType))
                 {
+                    addDataEvent(EyeTrackingData.Event.EnterGaze);
                     MasterDataController.instance.SaveData("Enter Gaze");
                 }
                 else
                 {
                     MasterDataController.instance.SaveDataEnterDistraction("Distraction Entered", distractionType, objectNameOverride);
+                    addDataEvent(new EyeTrackingData.Event(EyeTrackingData.EventType.EnterDistraction, distractionType, objectNameOverride));
                     timer = 0.0f;
                     timing = true;
                 }
@@ -73,14 +110,16 @@ namespace SMI
             else
             {
                 isGazed = false;
-                //MasterDataController.instance.SaveData("Exit Gaze");
+                MasterDataController.instance.SaveData("Exit Gaze");
                 if (string.IsNullOrEmpty(distractionType))
                 {
+                    addDataEvent(EyeTrackingData.Event.ExitGaze);
                     MasterDataController.instance.SaveData("Exit Gaze");
                 }
                 else
                 {
                     MasterDataController.instance.SaveDataExitDistraction("Distraction Exited", distractionType, objectNameOverride, timer);
+                    addDataEvent(new EyeTrackingData.Event(EyeTrackingData.EventType.ExitDistraction, distractionType, objectNameOverride, timer));
                     timing = false;
                     timer = 0.0f;
                 }
@@ -89,6 +128,7 @@ namespace SMI
                 {
                     MasterDataController.instance.hitObject = null;
                 }
+                clearHitObject();
             }
         }
 

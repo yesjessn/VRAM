@@ -2,25 +2,25 @@
 using System;
 
 public class ViveControllerPress : MonoBehaviour {
-	private Valve.VR.EVRButtonId touchpadButton = Valve.VR.EVRButtonId.k_EButton_Axis0;
-	private SteamVR_TrackedObject trackedObject;
-	private SteamVR_Controller.Device device;
-
 	private InputBroker input;
 
 	void Start() {
-		trackedObject = GetComponent<SteamVR_TrackedObject> ();
+		var controller = GetComponent<SteamVR_TrackedController> ();
+		if (controller != null) {
+			controller.PadClicked += HandlePadPress;
+		} else {
+			print("Controller not found on "+this.gameObject.name);
+		}
 		input = (InputBroker)FindObjectOfType(typeof(InputBroker));
 	}
 
-	void Update() {
-		device = SteamVR_Controller.Input ((int)trackedObject.index);
-		if (!device.GetPressDown (touchpadButton)) {
-			return;
-		}
-		var axis = device.GetAxis (touchpadButton);
-		if (System.Math.Abs (axis.x) > System.Math.Abs (axis.y)) {
-			if (axis.x > 0) {
+	void HandlePadPress(object sender, ClickedEventArgs e) {
+		var tracked = sender as SteamVR_TrackedController;
+		var device = SteamVR_Controller.Input((int) tracked.controllerIndex);
+		var x = e.padX;
+		var y = e.padY;
+		if (System.Math.Abs (x) > System.Math.Abs (y)) {
+			if (x > 0) {
 				// right
 				input.SetButtonDown ("Button2");
 				device.TriggerHapticPulse (1000);
@@ -30,7 +30,7 @@ public class ViveControllerPress : MonoBehaviour {
 				device.TriggerHapticPulse (1000);
 			}
 		} else {
-			if (axis.y > 0) {
+			if (y > 0) {
 				// up
 				input.SetButtonDown ("Button1");
 			} else {

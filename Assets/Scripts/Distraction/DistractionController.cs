@@ -39,7 +39,7 @@ namespace Distraction {
 		void Start () {
 			timerState = TimerState.Starting;
 			timer = new CountdownTimer (-1);
-			recordDistractors = new CSVWriter ("distractors.csv");
+			recordDistractors = CSVWriter.NewOutputFile("distractors");
 			recordDistractors.WriteRow ("time,distractor");
 			recordDistractors.WriteRow(Time.time + ",Start");
 
@@ -52,18 +52,18 @@ namespace Distraction {
 
 		// Update is called once per frame
 		void Update () {
-//			if (Input.GetButtonDown("Button2")) {
+//			if (Input.GetButtonDown ("Button4")) {
 //				var d = distractions [Random.Range (0, distractions.Length)];
 //				print ("Playing distractor: " + d.distractionName);
 //				d.TriggerDistraction (null);
 //				return;
 //			}
+//		}
 
 			if (timer.isComplete) {
 				if (timerState == TimerState.Waiting) {
 					if (distractions.Length > 0) {
 						var d = distractions [Random.Range (0, distractions.Length)];
-						print ("Playing distractor: " + d.distractionName);
 						recordDistractors.WriteRow (Time.time + "," + d.distractionName);
 						d.TriggerDistraction (null);
 					}

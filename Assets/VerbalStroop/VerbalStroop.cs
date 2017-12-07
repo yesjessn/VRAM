@@ -163,7 +163,7 @@ namespace VerbalStroop {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			this.timer = new CountdownTimer (-1);
-			recordResults = new CSVWriter ("verbal_stroop_results.csv");
+			recordResults = CSVWriter.NewOutputFile("verbal_stroop_results");
 			recordResults.WriteRow ("trial_number,trial_properties,button_pressed,reaction_time");
 			print ("Starting Verbal Stroop");
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
@@ -212,7 +212,7 @@ namespace VerbalStroop {
 				} else {
 					trialState = trialState.Next();
 				}
-				print ("Starting state " + trialState + " in trial number " + currentTrial);
+				//print ("Starting state " + trialState + " in trial number " + currentTrial);
 					
 				var instruction = trialState.Instructions();
 				if (instruction != "") {

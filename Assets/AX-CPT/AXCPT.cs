@@ -182,15 +182,7 @@ namespace AXCPT {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
-			string desktop = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
-			desktop = Path.Combine(desktop, "OutputLogs");
-			//UnityEngine.Windows
-			if(!Directory.Exists(desktop))
-			{
-				Directory.CreateDirectory(desktop);
-			}
-			var filepath = Path.Combine(desktop, "axcpt_results.csv");
-			recordResults = new CSVWriter (filepath);
+			recordResults = CSVWriter.NewOutputFile("axcpt_results");
 			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,stimulus_name,button_pressed,reaction_time");
 			print ("Starting AX-CPT");
             whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
@@ -202,7 +194,7 @@ namespace AXCPT {
 
 		void Update () {
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
-			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
+			var finishInstructions = trialState.isInstruction() && input.IsAnyKeyDown();
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.Probe && timer.isComplete;
 
 			if (finishInstructions || finishReady || finishState) {
@@ -249,7 +241,7 @@ namespace AXCPT {
 						trialState = trialState.Next ();
 					}
 				}
-				print ("Starting state " + trialState + " in trial number " + currentTrial);
+				//print ("Starting state " + trialState + " in trial number " + currentTrial);
 
 				var instruction = trialState.Instructions(textures);
 				if (instruction != "") {
