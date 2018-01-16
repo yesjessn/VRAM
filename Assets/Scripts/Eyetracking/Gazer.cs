@@ -64,21 +64,17 @@ namespace SMI
             {
                 gazeParent.OnGazeEnter(hitInformation);
                 isGazed = true;
-               MasterDataController.instance.hitObject = hitInformation.transform.gameObject;
             }
             else
             {
                 isGazed = true;
-                MasterDataController.instance.hitObject = this.transform.gameObject;
                 setHitObject(this.transform.gameObject);
                 if(string.IsNullOrEmpty(distractionType))
                 {
                     addDataEvent(EyeTrackingData.Event.EnterGaze);
-                    MasterDataController.instance.SaveData("Enter Gaze");
                 }
                 else
                 {
-                    MasterDataController.instance.SaveDataEnterDistraction("Distraction Entered", distractionType, objectNameOverride);
                     addDataEvent(new EyeTrackingData.Event(EyeTrackingData.EventType.EnterDistraction, distractionType, objectNameOverride));
                     timer = 0.0f;
                     timing = true;
@@ -110,24 +106,17 @@ namespace SMI
             else
             {
                 isGazed = false;
-                MasterDataController.instance.SaveData("Exit Gaze");
                 if (string.IsNullOrEmpty(distractionType))
                 {
                     addDataEvent(EyeTrackingData.Event.ExitGaze);
-                    MasterDataController.instance.SaveData("Exit Gaze");
                 }
                 else
                 {
-                    MasterDataController.instance.SaveDataExitDistraction("Distraction Exited", distractionType, objectNameOverride, timer);
                     addDataEvent(new EyeTrackingData.Event(EyeTrackingData.EventType.ExitDistraction, distractionType, objectNameOverride, timer));
                     timing = false;
                     timer = 0.0f;
                 }
 
-                if (MasterDataController.instance.hitObject == this.gameObject)
-                {
-                    MasterDataController.instance.hitObject = null;
-                }
                 clearHitObject();
             }
         }

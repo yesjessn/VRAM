@@ -72,6 +72,7 @@ public class EyeTrackingData : MonoBehaviour {
 	public enum EventType {
 		Standard,
 		EnterDistraction,
+		Distracted,
 		ExitDistraction,
 		EnterGaze,
 		ExitGaze,
@@ -81,19 +82,19 @@ public class EyeTrackingData : MonoBehaviour {
 		public EventType type;
 		public string distractionName;
 		public string nameOverride;
-		public float Duration;
+		public float duration;
 
 		public Event(EventType type)
-			: this(type, "", "", 0f) {}
+			: this(type, null, null, 0f) {}
 
 		public Event(EventType type, string distractionName, string nameOverride)
 			: this(type, distractionName, nameOverride, 0f) {}
 
-		public Event(EventType type, string distractionName, string nameOverride, float Duration) {
+		public Event(EventType type, string distractionName, string nameOverride, float duration) {
 			this.type = type;
 			this.distractionName = distractionName;
 			this.nameOverride = nameOverride;
-			this.Duration = Duration;
+			this.duration = duration;
 		}
 		
 		public static readonly Event Standard = new Event(EventType.Standard);
@@ -123,6 +124,9 @@ public class EyeTrackingData : MonoBehaviour {
     private Vector3 gazePoint;
     private string gazeObjectName;
     private float distanceToObject = 0.0f;
+
+	// Distractions
+	private string distractionName = null;
 
 	// Timers
 	private Timer standardGazeTimer;
@@ -155,6 +159,9 @@ public class EyeTrackingData : MonoBehaviour {
 	}
 
 	private string toCsvCell(object o) {
+		if (o == null) {
+			return "";
+		}
 		var s = o.ToString();
 		if (s.Contains(",")) {
 			if (s.Contains("\"")) {
@@ -169,17 +176,23 @@ public class EyeTrackingData : MonoBehaviour {
 		return String.Join(",", l.Select(x => toCsvCell(x)).ToArray());
 	}
 
+	private int standardRows = 0;
 	private string MakeStandardRow() {
+		standardRows++;
 		lock (eyeDataLock) {
 			latestData.Update();
 			// Standard row uses most recent values per Update()
 			var cols = latestData.GetColumns(playerHeadPosition, playerRotation, gazePoint);
+			EventType eType = EventType.Standard;
+			if (this.distractionName != null) {
+				eType = EventType.Distracted;
+			}
 			cols.AddRange(new object[] {
-				EventType.Standard,
-				"", // DistractionType
+				eType,
+				this.distractionName,
 				"", // Duration Distracted
-				"", // Active Gaze Object Name
-				"", // Distance to Active Gaze Object
+				gazeObjectName,
+				distanceToObject,
 				nextMessageNum(),
 			});
 			return toRow(cols);
@@ -189,11 +202,13 @@ public class EyeTrackingData : MonoBehaviour {
 	private string MakeEventRow(Event t) {
 		lock (eyeDataLock) {
 			latestData.Update();
-			var cols = latestData.GetColumns(playersTransform.position, playersTransform.eulerAngles, GetGazeObjectsPosition());
+			var pos = playersTransform != null ? playersTransform.position : Vector3.zero;
+			var angles = playersTransform != null ? playersTransform.eulerAngles : Vector3.zero;
+			var cols = latestData.GetColumns(pos, angles, GetGazeObjectsPosition());
 			cols.AddRange(new object[] {
 				t.type,
-				t.distractionName,
-				t.Duration > 0 ? t.Duration.ToString() : "",
+				distractionName,
+				t.duration > 0 ? t.duration.ToString() : "",
 				GetHitObjectName(),
 				GetHitObjectDistance(),
 				nextMessageNum(),
@@ -206,24 +221,37 @@ public class EyeTrackingData : MonoBehaviour {
 		if (!recordingEnabled) {
 			return;
 		}
-		switch (t.type) {
-			case EventType.Standard:
-				messageQueue.Enqueue(MakeStandardRow());
-				break;
-			default:
-				messageQueue.Enqueue(MakeEventRow(t));
-				break;
+		try {
+			switch (t.type) {
+				case EventType.Standard:
+					messageQueue.Enqueue(MakeStandardRow());
+					break;
+				case EventType.EnterDistraction:
+					this.distractionName = t.distractionName;
+					goto default;
+				case EventType.ExitDistraction:
+					this.distractionName = null;
+					goto default;
+				default:
+					messageQueue.Enqueue(MakeEventRow(t));
+					break;
+			}
+		} catch (Exception e) {
+			messageQueue.Enqueue(e.Message + "," + e.TargetSite);
 		}
 	}
 
 	private void WriteDataToFile() {
 		StringBuilder sb = new StringBuilder();
 		string row;
+		int count = 0;
 		while (messageQueue.TryDequeue(out row)) {
 			sb.AppendLine(row);
+			count++;
 		}
 		if (sb.Length > 0) {
 			outputFile.Write(sb.ToString());
+			print("Wrote " + count + " lines");
 		}
 	}
 
@@ -248,10 +276,12 @@ public class EyeTrackingData : MonoBehaviour {
 		var standardGazeCallback = new TimerCallback(delegate(object state) { AddEvent(Event.Standard); });
 		var standardGazeInterval = new TimeSpan(0, 0, 0, 0, 4); // Every 4 milliseconds
 		this.standardGazeTimer = new Timer(standardGazeCallback, null, noDelay, standardGazeInterval);
+		print("Started interval eye tracker. Schedule: every " + standardGazeInterval.ToString());
 
 		var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });
 		var fileWriteInterval = new TimeSpan(0, 0, 10); // Every 10 seconds
 		this.fileWriteTimer = new Timer(fileWriteCallback, null, noDelay, fileWriteInterval);
+		print("Started file writer. Schedule: every " + fileWriteInterval.ToString());
 	}
 
 	void Update() {

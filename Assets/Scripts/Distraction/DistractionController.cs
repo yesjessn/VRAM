@@ -8,7 +8,7 @@ namespace Distraction {
 	public static class TimerStateExtensions {
 		public static float Duration(this TimerState state) {
 			switch (state) {
-			case TimerState.Waiting:  return Random.Range(0f, 40f);
+			case TimerState.Waiting:  return Random.Range(0f, 10f);
 			case TimerState.Cooldown: return 20f;
 			default:                  return -1f;
 			}
