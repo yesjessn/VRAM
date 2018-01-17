@@ -13,7 +13,7 @@ public class EyeTrackingData : MonoBehaviour {
 	static string HEADER = "TimeStamp,Time Since Start,Player Head Position,Player Rotation Euler,Binocular POR," +
 		"Camera Raycast Direction,Interpupillary Distance,Left Eye POR, Right Eye POR," + 
 		"Left Eye Base Position,Right Eye Base Position,Left Eye Gaze Direction,Right Eye Gaze Direction," +
-		"Gaze Object Position,Type Of Message,DistractionType,Duration Distracted,Active Gaze Object Name,Distance To Active Gaze Object,# Of Data Entries";
+		"Gaze Object Position,Type Of Message,DistractionName,Duration Distracted,Active Gaze Object Name,Distance To Active Gaze Object,# Of Data Entries";
 
 	class EyeData {
 		public readonly DateTime startTime;
@@ -52,7 +52,7 @@ public class EyeTrackingData : MonoBehaviour {
 		public List<object> GetColumns(Vector3 playerHeadPosition, Vector3 playerRotation, Vector3 gazePoint) {
 			return new List<object>{
 				snapshotTime.ToString("MM/dd/yyyy hh:mm:ss.fffff"),
-				timeSpan.Hours + "-" + timeSpan.Minutes + "-" + timeSpan.Seconds + "-" + timeSpan.Milliseconds,
+				timeSpan.TotalMilliseconds,
 				playerHeadPosition,
 				playerRotation,
 				binocularPor,
@@ -227,7 +227,7 @@ public class EyeTrackingData : MonoBehaviour {
 					messageQueue.Enqueue(MakeStandardRow());
 					break;
 				case EventType.EnterDistraction:
-					this.distractionName = t.distractionName;
+					this.distractionName = t.nameOverride;
 					goto default;
 				case EventType.ExitDistraction:
 					this.distractionName = null;
