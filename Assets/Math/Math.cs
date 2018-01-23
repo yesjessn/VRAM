@@ -91,7 +91,7 @@ namespace Math {
 		}
 	}
 
-	public class Math : MonoBehaviour {
+	public class Math : VRAMTask {
 		const int NumberOfBlocks = 6;
 		const float BlockTime = 3 * 60.0f;
 
@@ -212,6 +212,10 @@ namespace Math {
 					}
 				}
 			}
+		}
+
+		public override string GetCurrentState() {
+			return trialState.ToString();
 		}
 	}
 }

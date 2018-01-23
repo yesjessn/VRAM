@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace Distraction {
 	public static class TimerStateExtensions {
 		public static float Duration(this TimerState state) {
 			switch (state) {
-			case TimerState.Waiting:  return Random.Range(0f, 10f);
+			case TimerState.Waiting:  return UnityEngine.Random.Range(0f, 10f);
 			case TimerState.Cooldown: return 20f;
 			default:                  return -1f;
 			}
@@ -31,6 +32,13 @@ namespace Distraction {
 
 		private Distraction[] distractions;
 
+		private Distraction currentDistraction;
+
+		private readonly Action endDistraction;
+
+		public DistractionController() {
+			endDistraction = () => currentDistraction = null;
+		}
 		void Awake () {
 			distractions = FindObjectsOfType (typeof(Distraction)) as Distraction[];
 		}
@@ -63,9 +71,9 @@ namespace Distraction {
 			if (timer.isComplete) {
 				if (timerState == TimerState.Waiting) {
 					if (distractions.Length > 0) {
-						var d = distractions [Random.Range (0, distractions.Length)];
-						recordDistractors.WriteRow (Time.time + "," + d.distractionName);
-						d.TriggerDistraction (null);
+						currentDistraction = distractions [UnityEngine.Random.Range (0, distractions.Length)];
+						recordDistractors.WriteRow (Time.time + "," + currentDistraction.distractionName);
+						currentDistraction.TriggerDistraction (endDistraction);
 					}
 				}
 				timerState = timerState.Next ();
@@ -76,6 +84,10 @@ namespace Distraction {
 
 		void OnDisable () {
 			recordDistractors.Close ();
+		}
+
+		public Distraction GetCurrentDistraction() {
+			return currentDistraction;
 		}
 	}
 }

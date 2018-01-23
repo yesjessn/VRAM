@@ -17,10 +17,11 @@ public class TaskSelector : MonoBehaviour {
 	public GameObject mainMenu;
 	public GameObject axcptMenu;
 	public GameObject mathMenu;
-	public GameObject axcptTask;
-	public GameObject mathTask;
-	public GameObject verbalStroopTask;
-    private GameObject _activeTask;
+	public VRAMTask axcptTask;
+	public VRAMTask mathTask;
+	public VRAMTask verbalStroopTask;
+    private VRAMTask _activeTask;
+	public VRAMTask activeTask {get {return _activeTask;}}
 
     void Awake()
     {
@@ -77,7 +78,7 @@ public class TaskSelector : MonoBehaviour {
     public void ActivateActiveTask()
     {
         if (_activeTask != null)
-            _activeTask.SetActive(true);
+            _activeTask.gameObject.SetActive(true);
         else
             Debug.LogError("There was no task selected");
     }

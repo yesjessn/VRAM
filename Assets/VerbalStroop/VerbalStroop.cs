@@ -131,7 +131,7 @@ namespace VerbalStroop {
 		}
 	}
 
-	public class VerbalStroop : MonoBehaviour {
+	public class VerbalStroop : VRAMTask {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
@@ -246,6 +246,10 @@ namespace VerbalStroop {
 					timer.Start ();
 				}
 			}
+		}
+
+		public override string GetCurrentState() {
+			return trialState.ToString();
 		}
 	}
 }

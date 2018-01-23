@@ -151,7 +151,7 @@ namespace AXCPT {
 		}
 	}
 
-	public class AXCPT : MonoBehaviour {
+	public class AXCPT : VRAMTask {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
@@ -265,6 +265,10 @@ namespace AXCPT {
 					timer.Start ();
 				}
 			}
+		}
+
+		public override string GetCurrentState() {
+			return trialState.ToString();
 		}
 	}
 }

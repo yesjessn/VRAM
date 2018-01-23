@@ -41,7 +41,7 @@ namespace SMI
             if (writer == null) {
                 return;
             }
-            writer.hitObject = obj;
+            writer.SetHitObject(obj);
         }
 
         private void clearHitObject() {
@@ -49,7 +49,7 @@ namespace SMI
             if (writer == null) {
                 return;
             }
-            writer.hitObject = null;
+            writer.ClearHitObject();
         }
 
 		public void SetDistractionParams(string distractionType, string distractionName) {
