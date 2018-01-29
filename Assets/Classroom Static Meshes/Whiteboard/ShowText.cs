@@ -8,13 +8,8 @@ public class ShowText : MonoBehaviour {
 	public Text whiteboardText;
 
 	// Use this for initialization
-	void Start () {
-		Hide ();
-	}
+	void Start () { }
 	
-	// Update is called once per frame
-	void Update () { }
-
 	public void Hide () {
 		whiteboardText.gameObject.SetActive (false);
 	}

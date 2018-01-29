@@ -97,10 +97,7 @@ namespace Math {
 
         public Textures textures;
 		public RecordResponses recorder;
-		public DistractionController distractionController;
 
-		private ShowImage whiteboardImage;
-		private ShowText whiteboardText;
 		private TrialState trialState;
 		private int currentTrial;
 		private BlockType type;
@@ -109,7 +106,7 @@ namespace Math {
 		private CountdownTimer blockTimer;
 		private CSVWriter recordResults;
 		private MathPractice practice;
-		private InputBroker input;
+		private string currentProblemName;
 
 		private Textures mathTextures {
 			get {
@@ -121,25 +118,36 @@ namespace Math {
 			}
 		}
 
-		void Start () {
-			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
+		protected override void Start () {
+			base.Start();
+			practice = GetComponent<MathPractice> ();
+		}
+
+		void OnEnable() {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			currentBlock = 0;
 			type = BlockType.Easy;
 			trialState = TrialState.Starting;
 			trialTimer = new CountdownTimer (-1);
 			blockTimer = new CountdownTimer (BlockTime);
-            whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
-			whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
-			whiteboardText.SetText (trialState.Instructions());
-			whiteboardText.Show ();
 			recordResults = CSVWriter.NewOutputFile("math_results");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
-			print ("Starting Math");
-			practice = GetComponent<MathPractice> ();
+		}
+
+		void OnDisable() {
+			recordResults.Close();
 		}
 
 		void Update () {
+			if (trialState == TrialState.Ending) {
+				EndTask();
+				return;
+			} else if (trialState == TrialState.Starting) {
+				print ("Starting Math");
+				ShowText (trialState.Instructions());
+				trialState = trialState.Next();
+				return;
+			}
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
 			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && (trialTimer.isComplete || recorder.hasResponse);
@@ -156,8 +164,6 @@ namespace Math {
 						if (currentBlock == NumberOfBlocks) {
 							trialState = TrialState.Ending;
 							recordResults.Close ();
-							whiteboardImage.Hide ();
-							distractionController.gameObject.SetActive (false);
 							return;
 						}
 						switch (type) {
@@ -175,7 +181,7 @@ namespace Math {
 					if (blockComplete || finishState || finishInstructions || finishReady) {
 						if (trialState == TrialState.Problem) {
 							if (practice.enabled) {
-								nextState = practice.HandleStopRecording (trialState, recorder, whiteboardImage.GetTexture ());
+								nextState = practice.HandleStopRecording (trialState, recorder, currentProblemName);
 							} else {
 								var response = recorder.StopRecording ();
 								var output = new TrialOutput (currentTrial, currentBlock, type, response);
@@ -194,13 +200,11 @@ namespace Math {
 
 						var instruction = trialState.Instructions ();
 						if (instruction != "") {
-							whiteboardImage.Hide ();
-							whiteboardText.SetText (instruction);
-							whiteboardText.Show ();
+							ShowText (instruction);
 						} else {
-							whiteboardText.Hide ();
-							whiteboardImage.SetTexture (trialState.GetTexture (type, mathTextures));
-							whiteboardImage.Show ();
+							var currentProblem = trialState.GetTexture (type, mathTextures);
+							currentProblemName = currentProblem.name;
+							ShowImage (currentProblem);
 
 							trialTimer.duration = trialState.Duration ();
 							if (trialState == TrialState.Problem) {

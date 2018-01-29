@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -48,9 +49,10 @@ public class EyeTrackingData : MonoBehaviour {
 			"Entry #",
 			"Timestamp", "Time Since Start",
 			"Type Of Message",
-			"ActiveTask", "TaskState",
+			"Active Task", "Task State",
 			"Active Gaze Object Name", "Gaze Object Position", "Distance To Active Gaze Object",
-			"Current Distraction Object", "Current Distraction Name", "Duration Distracted",
+			"Current Distraction Object", "Current Distraction Name", 
+			"Is Distracted", "Duration Distracted",
 			"Player Head Position", "Player Rotation Euler",
 			"Binocular POR", "Camera Raycast Direction", "Interpupillary Distance",
 			"Left Eye POR", "Right Eye POR",
@@ -88,7 +90,6 @@ public class EyeTrackingData : MonoBehaviour {
 		}
 
 		public void update() {
-			messageNumber++;
 			snapshotTime = DateTime.Now;
 			timeSinceStart = snapshotTime - startTime;
 			eye.Update();
@@ -126,7 +127,7 @@ public class EyeTrackingData : MonoBehaviour {
 			return Vector3.zero;
 		}
 
-		private string toCsvCell(object o) {
+		private static string toCsvCell(object o) {
 			if (o == null) {
 				return "";
 			}
@@ -140,22 +141,38 @@ public class EyeTrackingData : MonoBehaviour {
 			return s;
 		}
 
-		private string toRow(List<object> l) {
+		private static string toRow(List<object> l) {
 			return String.Join(COLUMN_DELIM, l.Select(x => toCsvCell(x)).ToArray());
 		}
 
 		public string ToRow(Event evt) {
-			EventType eType = EventType.Standard;
-			if (currentDistraction != null && gazeObjectName == currentDistraction.gameObject.name) {
-				eType = EventType.Distracted;
+			messageNumber++;
+			if (evt == null) {
+				evt = Event.Standard;
 			}
+			EventType eType = evt.type;
+			switch (eType) {
+				case EventType.Distracted:
+					eType = EventType.Standard;
+					break;
+				case EventType.EnterDistraction:
+					eType = EventType.EnterGaze;
+					break;
+				case EventType.ExitDistraction:
+					eType = EventType.ExitGaze;
+					break;
+			}
+			var currentDistractionObj = currentDistraction != null ? currentDistraction.distractionObjectName : "";
+			var currentDistractionName = currentDistraction != null ? currentDistraction.distractionName : "";
+			var isDistracted = currentDistraction != null && gazeObjectName == currentDistraction.distractionObjectName;
 			return toRow(new List<object>{
 				messageNumber,
 				snapshotTime.ToString("MM/dd/yyyy hh:mm:ss.fffff"), timeSinceStart.TotalMilliseconds,
 				eType,
 				activeTaskName, currentTaskState,
 				gazeObjectName, gazePoint, distanceToObject,
-				currentDistraction.gameObject.name, currentDistraction.distractionName, evt.duration,
+				currentDistractionObj, currentDistractionName,
+				isDistracted, evt.duration,
 				playerHeadPosition, playerRotation,
 				eye.binocularPor, eye.cameraRaycast, eye.ipd,
 				eye.leftPor, eye.rightPor,
@@ -198,6 +215,8 @@ public class EyeTrackingData : MonoBehaviour {
 		public static readonly Event ExitGaze = new Event(EventType.ExitGaze);
 	}
 
+	static TimeSpan NO_DELAY = new TimeSpan(0, 0, 0);
+
 	public string filename;
 	public bool recordingEnabled;
 
@@ -209,7 +228,7 @@ public class EyeTrackingData : MonoBehaviour {
 	private readonly ConcurrentQueue<string> messageQueue = new ConcurrentQueue<string>();
 
 	// Output
-	private CSVWriter outputFile; // Computed on Start() from `filename`
+	private CSVWriter outputFile; // Computed on OnEnable() from `filename`
 
 
 	// Timers
@@ -221,13 +240,18 @@ public class EyeTrackingData : MonoBehaviour {
 			return;
 		}
 		try {
-			string row;
 			lock (rowDataLock) {
-				row = latestData.ToRow(Event.Standard);
+				if (latestData != null) {
+					messageQueue.Enqueue(latestData.ToRow(t));
+				} else {
+					UnityEngine.Debug.LogError(String.Format("RowData not yet initialized,Event: {0}", t.type));
+				}
 			}
-			messageQueue.Enqueue(row);
 		} catch (Exception e) {
-			messageQueue.Enqueue(e.Message + "," + e.TargetSite);
+			var frames = new StackTrace(e, true).GetFrames();
+			var frame = frames.Length > 1 ? frames[frames.Length - 2] : frames.Last();
+			var locInfo = String.Format("\"{0}:{1}({2},{3})\"", frame.GetFileName(), frame.GetMethod().Name, frame.GetFileLineNumber(), frame.GetFileColumnNumber());
+			UnityEngine.Debug.LogError(e.GetType().Name + ": " + e.Message + " @ " + e.TargetSite + " - " + locInfo);
 		}
 	}
 
@@ -245,7 +269,19 @@ public class EyeTrackingData : MonoBehaviour {
 		}
 	}
 
-	void Start() {
+	public void SetHitObject(GameObject obj) {
+		lock (rowDataLock) {
+			latestData.hitObject = obj;
+		}
+	}
+
+	public void ClearHitObject() {
+		lock (rowDataLock) {
+			latestData.hitObject = null;
+		}
+	}
+
+	void OnEnable() {
 		var startTime = DateTime.Now;
 		
 		lock (rowDataLock) {
@@ -262,34 +298,38 @@ public class EyeTrackingData : MonoBehaviour {
 			if (taskControllerObj != null) {
 				latestData.taskSelector = taskControllerObj.GetComponent<TaskSelector>();
 			}
+			latestData.update();
 		}
-		
-		this.outputFile = CSVWriter.NewOutputFile(filename);
 
-		messageQueue.Enqueue(RowData.HEADER);
-
-		var noDelay = new TimeSpan(0, 0, 0);
 
 		var standardGazeCallback = new TimerCallback(delegate(object state) { AddEvent(Event.Standard); });
 		var standardGazeInterval = new TimeSpan(0, 0, 0, 0, 4); // Every 4 milliseconds
-		this.standardGazeTimer = new Timer(standardGazeCallback, null, noDelay, standardGazeInterval);
+		this.standardGazeTimer = new Timer(standardGazeCallback, null, NO_DELAY, standardGazeInterval);
 		print("Started interval eye tracker. Schedule: every " + standardGazeInterval.ToString());
+	}
+
+	void OnDisable() {
+		this.standardGazeTimer.Dispose();
+	}
+
+	void Awake() {
+		outputFile = CSVWriter.NewOutputFile(filename);
+		messageQueue.Enqueue(RowData.HEADER);
 
 		var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });
 		var fileWriteInterval = new TimeSpan(0, 0, 10); // Every 10 seconds
-		this.fileWriteTimer = new Timer(fileWriteCallback, null, noDelay, fileWriteInterval);
+		this.fileWriteTimer = new Timer(fileWriteCallback, null, NO_DELAY, fileWriteInterval);
 		print("Started file writer. Schedule: every " + fileWriteInterval.ToString());
 	}
 
-	public void SetHitObject(GameObject obj) {
-		lock (rowDataLock) {
-			latestData.hitObject = obj;
-		}
+	void OnDestroy() {
+		outputFile.Close();
+		fileWriteTimer.Dispose();
 	}
 
-	public void ClearHitObject() {
+	void Update() {
 		lock (rowDataLock) {
-			latestData.hitObject = null;
+			latestData.update();
 		}
 	}
 }

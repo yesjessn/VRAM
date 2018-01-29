@@ -33,7 +33,7 @@ public class RecordResponses : MonoBehaviour {
 	void Start () {
 		recording = false;
 		response = new List<Response> ();
-		input = (InputBroker)FindObjectOfType(typeof(InputBroker));
+		input = FindObjectOfType<InputBroker>();
 	}
 
 	public void StartRecording() {

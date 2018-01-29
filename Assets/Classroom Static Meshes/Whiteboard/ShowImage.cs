@@ -8,12 +8,7 @@ public class ShowImage : MonoBehaviour {
 	public RawImage img;
 
 	// Use this for initialization
-	void Start () {
-		Hide ();
-	}
-	
-	// Update is called once per frame
-	void Update () { }
+	void Start () { }
 
 	public void Hide() {
 		img.gameObject.SetActive (false);

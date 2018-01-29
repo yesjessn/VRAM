@@ -135,17 +135,13 @@ namespace VerbalStroop {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
-		public DistractionController distractionController;
 
 		private int currentTrial;
 		private AvatarController avatar;
 		private TrialState trialState;
 		private CountdownTimer timer;
 		private CSVWriter recordResults;
-		private ShowText whiteboardText;
-		private ShowImage whiteboardImage;
 		private VerbalStroopPractice practice;
-		private InputBroker input;
 
 		private TrialList trialList {
 			get {
@@ -157,23 +153,34 @@ namespace VerbalStroop {
 			}
 		}
 
-		void Start () {
-			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
+		protected override void Start () {
+			base.Start();
 			avatar = GetComponent<AvatarController> ();
+			practice = GetComponent<VerbalStroopPractice> ();
+		}
+
+		void OnEnable() {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			this.timer = new CountdownTimer (-1);
 			recordResults = CSVWriter.NewOutputFile("verbal_stroop_results");
 			recordResults.WriteRow ("trial_number,trial_properties,button_pressed,reaction_time");
-			print ("Starting Verbal Stroop");
-            whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
-            whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
-            whiteboardText.SetText (trialState.Instructions());
-			whiteboardText.Show ();
-			practice = GetComponent<VerbalStroopPractice> ();
+		}
+
+		void OnDisable() {
+			recordResults.Close();
 		}
 
 		void Update () {
+			if (trialState == TrialState.Ending) {
+				EndTask();
+				return;
+			} else if (trialState == TrialState.Starting) {
+				print ("Starting Verbal Stroop");
+				ShowText (trialState.Instructions());
+				trialState = trialState.Next();
+				return;
+			}
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
 			var finishInstructions = trialState.isInstruction() && (input.GetButtonDown ("Button1") || input.GetButtonDown ("Button2") || input.GetButtonDown ("Button4"));
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.ITI && timer.isComplete;
@@ -198,8 +205,6 @@ namespace VerbalStroop {
 					if (currentTrial == trialList.trialProperties.Length) {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
-						whiteboardImage.Hide ();
-						distractionController.gameObject.SetActive (false);
 						return;
 					}
 				} 
@@ -216,27 +221,19 @@ namespace VerbalStroop {
 					
 				var instruction = trialState.Instructions();
 				if (instruction != "") {
-					whiteboardImage.Hide ();
-					whiteboardText.SetText (instruction);
-					whiteboardText.SetColor (Color.black);
-					whiteboardText.Show ();
+					ShowText(instruction);
 				} else {
-					whiteboardText.Hide ();
 					// currentTrial will be -1 on the first precueiti state when we need to show the iti texture
 					// in that case, using null is okay for trial type because the iti texture doesn't depend on the trial type.
 					var trialProperties = currentTrial == -1 ? null : trialList.trialProperties [currentTrial];
 					switch (trialState) {
 					case TrialState.Word:
 						avatar.Play (trialList.trialProperties [currentTrial].sound);
-						whiteboardText.SetText (trialList.trialProperties [currentTrial].text.ToString ());
-						whiteboardText.SetColor (trialList.trialProperties [currentTrial].color.GetColor ());
-						whiteboardImage.Hide ();
-						whiteboardText.Show ();
+						var trialProps = trialList.trialProperties [currentTrial];
+						ShowColorText (trialProps.text.ToString (), trialProps.color.GetColor ());
 						break;
 					case TrialState.ITI:
-						whiteboardImage.SetTexture (textures.iti);
-						whiteboardText.Hide ();
-						whiteboardImage.Show ();
+						ShowImage (textures.iti);
 						break;
 					}
 					timer.duration = trialState.Duration ();

@@ -11,12 +11,12 @@ namespace Math {
 			print ("Enabled Math Practice");	
 		}
 
-		public Option<TrialState> HandleStopRecording(TrialState state, RecordResponses recorder, Texture currentProblem) {
+		public Option<TrialState> HandleStopRecording(TrialState state, RecordResponses recorder, string currentProblem) {
 			var response = recorder.StopRecording ();
 			if (state == TrialState.Problem) {
 				if (response.Count == 0) {
 					return Option<TrialState>.Create(TrialState.Slow);
-				} else if (checker.Check (currentProblem.name, response.Last().buttonPressed)) {
+				} else if (checker.Check (currentProblem, response.Last().buttonPressed)) {
 					return Option<TrialState>.Create(TrialState.Correct);
 				} else {
 					return Option<TrialState>.Create(TrialState.Incorrect);

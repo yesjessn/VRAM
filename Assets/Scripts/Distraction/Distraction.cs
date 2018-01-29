@@ -24,6 +24,7 @@ namespace Distraction {
         public float volume = 0.5f;
         public string animTriggerName;
 		public string distractionName;
+		public string distractionObjectName;
 
         private Queue<Action> _actionQueue = new Queue<Action>();
 
@@ -39,7 +40,12 @@ namespace Distraction {
 			}
 		}
 
-        void Start() { }
+        void Start() {
+			if (distractionName == null || distractionName == "") {
+				UnityEngine.Debug.LogError(String.Format("{0} distraction on {1} is missing name!", distractionType, gameObject.name), gameObject);
+			}
+			distractionObjectName = gameObject.gameObject.name;
+		}
 
         public void TriggerDistraction(Action callback) {
 			activateCollider ();

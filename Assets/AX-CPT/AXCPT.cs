@@ -86,21 +86,11 @@ namespace AXCPT {
 
 		public static TrialState Next(this TrialState state) {
 			switch (state) {
-			case TrialState.Starting:     return TrialState.Instruction1;
-			case TrialState.Instruction1: return TrialState.Instruction2;
-			case TrialState.Instruction2: return TrialState.Instruction3;
-			case TrialState.Instruction3: return TrialState.Instruction4;
-			case TrialState.Instruction4: return TrialState.Instruction5;
-			case TrialState.Instruction5: return TrialState.Ready;
-			case TrialState.Ready:        return TrialState.PreCueITI;
-			case TrialState.PreCueITI:    return TrialState.Cue;
-			case TrialState.Cue:          return TrialState.ISI;
 			case TrialState.ISI:          return TrialState.Probe;
-			case TrialState.PreProbeITI:  return TrialState.Probe;
 			case TrialState.Probe:        return TrialState.PreCueITI;
 			case TrialState.Slow:         return TrialState.PreCueITI;
 			case TrialState.Incorrect:    return TrialState.PreCueITI;
-			default:                      return TrialState.Ending;
+			default:                      return (TrialState)((int)state + 1);
 			}
 		}
 
@@ -155,17 +145,13 @@ namespace AXCPT {
 		public TrialList trials;
 		public Textures textures;
 		public RecordResponses recorder;
-		public DistractionController distractionController;
 
 		private int currentTrial;
 		private TrialState trialState;
 		private CountdownTimer timer;
 		private CSVWriter recordResults;
 		private string stimulusName;
-		private ShowText whiteboardText;
-		private ShowImage whiteboardImage;
 		private AXCPTPractice practice;
-		private InputBroker input;
 
 		private TrialList trialList {
 			get {
@@ -177,22 +163,33 @@ namespace AXCPT {
 			}
 		}
 
-		void Start () {
-			input = (InputBroker)FindObjectOfType(typeof(InputBroker));
+		protected override void Start () {
+			base.Start();
+			practice = GetComponent<AXCPTPractice> ();
+		}
+
+		void OnEnable() {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
 			recordResults = CSVWriter.NewOutputFile("axcpt_results");
 			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,stimulus_name,button_pressed,reaction_time");
-			print ("Starting AX-CPT");
-            whiteboardText = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowText>();
-            whiteboardImage = GameObject.Find("WhiteBoardWithDisplay").GetComponent<ShowImage>();
-            whiteboardText.SetText (trialState.Instructions(textures));
-			whiteboardText.Show ();
-			practice = GetComponent<AXCPTPractice> ();
+		}
+
+		void OnDisable() {
+			recordResults.Close();
 		}
 
 		void Update () {
+			if (trialState == TrialState.Ending) {
+				EndTask();
+				return;
+			} else if (trialState == TrialState.Starting) {
+				print ("Starting AX-CPT");
+				ShowText (trialState.Instructions(textures));
+				trialState = trialState.Next();
+				return;
+			}
 			var finishReady = trialState == TrialState.Ready && input.GetButtonDown ("Button3");
 			var finishInstructions = trialState.isInstruction() && input.IsAnyKeyDown();
 			var finishState = (int)trialState > (int)TrialState.Ready && (int)trialState <= (int)TrialState.Probe && timer.isComplete;
@@ -218,8 +215,6 @@ namespace AXCPT {
 					if (currentTrial == trialList.trialTypes.Length) {
 						trialState = TrialState.Ending;
 						recordResults.Close ();
-						whiteboardImage.Hide ();
-						distractionController.gameObject.SetActive (false);
 						return;
 					}
 				}
@@ -245,17 +240,13 @@ namespace AXCPT {
 
 				var instruction = trialState.Instructions(textures);
 				if (instruction != "") {
-					whiteboardImage.Hide ();
-					whiteboardText.SetText (instruction);
-					whiteboardText.Show ();
+					ShowText (instruction);
 				} else {
-					whiteboardText.Hide ();
 					// currentTrial will be -1 on the first precueiti state when we need to show the iti texture
 					// in that case, using null is okay for trial type because the iti texture doesn't depend on the trial type.
 					var trialType = currentTrial == -1 ? null : trialList.trialTypes [currentTrial];
 					var selectedTexture = trialState.GetTexture (trialType, textures);
-					whiteboardImage.SetTexture(selectedTexture);
-					whiteboardImage.Show ();
+					ShowImage(selectedTexture);
 
 					timer.duration = trialState.Duration ();
 					if (trialState == TrialState.Cue || trialState == TrialState.Probe) {
