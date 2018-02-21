@@ -11,6 +11,7 @@ public abstract class VRAMTask : MonoBehaviour {
     private ShowText whiteboardText;
     private ShowImage whiteboardImage;
     protected InputBroker input;
+    protected SubjectData subject;
 
     protected virtual void Start() {
         var wb = GameObject.Find("WhiteBoardWithDisplay");
@@ -26,6 +27,7 @@ public abstract class VRAMTask : MonoBehaviour {
         if (input == null) {
             print("ERROR: Could not find InputBroker!");
         }
+        subject = FindObjectOfType<SubjectData>();
     }
 
     protected void ShowImage(Texture img) {

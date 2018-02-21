@@ -163,7 +163,7 @@ namespace VerbalStroop {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			this.timer = new CountdownTimer (-1);
-			recordResults = CSVWriter.NewOutputFile("verbal_stroop_results");
+			recordResults = CSVWriter.NewOutputFile(subject, "verbal_stroop_results");
 			recordResults.WriteRow ("trial_number,trial_properties,button_pressed,reaction_time");
 		}
 

@@ -130,7 +130,7 @@ namespace Math {
 			trialState = TrialState.Starting;
 			trialTimer = new CountdownTimer (-1);
 			blockTimer = new CountdownTimer (BlockTime);
-			recordResults = CSVWriter.NewOutputFile("math_results");
+			recordResults = CSVWriter.NewOutputFile(subject, "math_results");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
 		}
 

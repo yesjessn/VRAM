@@ -313,7 +313,7 @@ public class EyeTrackingData : MonoBehaviour {
 	}
 
 	void Awake() {
-		outputFile = CSVWriter.NewOutputFile(filename);
+		outputFile = CSVWriter.NewOutputFile(FindObjectOfType<SubjectData>(), filename);
 		messageQueue.Enqueue(RowData.HEADER);
 
 		var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });

@@ -47,7 +47,7 @@ namespace Distraction {
 		void OnEnable () {
 			timerState = TimerState.Starting;
 			timer = new CountdownTimer (-1);
-			recordDistractors = CSVWriter.NewOutputFile("distractors");
+			recordDistractors = CSVWriter.NewOutputFile(FindObjectOfType<SubjectData>(), "distractors");
 			recordDistractors.WriteRow ("time,distractor");
 			recordDistractors.WriteRow(Time.time + ",Start");
 

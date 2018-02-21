@@ -172,7 +172,7 @@ namespace AXCPT {
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);
-			recordResults = CSVWriter.NewOutputFile("axcpt_results");
+			recordResults = CSVWriter.NewOutputFile(subject, "axcpt_results");
 			recordResults.WriteRow ("trial_number,trial_type,stimulus_type,stimulus_name,button_pressed,reaction_time");
 		}
 
