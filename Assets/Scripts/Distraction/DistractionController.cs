@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Subject;
 
 namespace Distraction {
 	public enum TimerState {Starting, Waiting, Cooldown}
@@ -47,7 +48,7 @@ namespace Distraction {
 		void OnEnable () {
 			timerState = TimerState.Starting;
 			timer = new CountdownTimer (-1);
-			recordDistractors = CSVWriter.NewOutputFile(FindObjectOfType<SubjectData>(), "distractors");
+			recordDistractors = CSVWriter.NewOutputFile(FindObjectOfType<SubjectDataHolder>(), "distractors");
 			recordDistractors.WriteRow ("time,distractor");
 			recordDistractors.WriteRow(Time.time + ",Start");
 

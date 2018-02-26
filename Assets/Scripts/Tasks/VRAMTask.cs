@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using Distraction;
 using UnityEngine.SceneManagement;
+using Subject;
 
 public abstract class VRAMTask : MonoBehaviour {
     private static Color DEFAULT_TEXT_COLOR = Color.black;
@@ -11,9 +13,9 @@ public abstract class VRAMTask : MonoBehaviour {
     private ShowText whiteboardText;
     private ShowImage whiteboardImage;
     protected InputBroker input;
-    protected SubjectData subject;
+    protected SubjectDataHolder subject;
 
-    protected virtual void Start() {
+    void Awake() {
         var wb = GameObject.Find("WhiteBoardWithDisplay");
         if (wb != null) {
             whiteboardText = wb.GetComponent<ShowText>();
@@ -27,7 +29,7 @@ public abstract class VRAMTask : MonoBehaviour {
         if (input == null) {
             print("ERROR: Could not find InputBroker!");
         }
-        subject = FindObjectOfType<SubjectData>();
+        subject = FindObjectOfType<SubjectDataHolder>();
     }
 
     protected void ShowImage(Texture img) {
@@ -52,6 +54,7 @@ public abstract class VRAMTask : MonoBehaviour {
         whiteboardText.Hide();
         distractionController.gameObject.SetActive (false);
         this.gameObject.SetActive(false);
+        subject.AppendSession(new SessionData(DateTime.Now));
         SceneManager.LoadScene ("MenuScene");
     }
 

@@ -9,6 +9,7 @@ using System.Threading.Collections;
 using UnityEngine;
 using SMI;
 using Distraction;
+using Subject;
 
 public class EyeTrackingData : MonoBehaviour {
 	class EyeData {
@@ -313,7 +314,7 @@ public class EyeTrackingData : MonoBehaviour {
 	}
 
 	void Awake() {
-		outputFile = CSVWriter.NewOutputFile(FindObjectOfType<SubjectData>(), filename);
+		outputFile = CSVWriter.NewOutputFile(FindObjectOfType<SubjectDataHolder>(), filename);
 		messageQueue.Enqueue(RowData.HEADER);
 
 		var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });

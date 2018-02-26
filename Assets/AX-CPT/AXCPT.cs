@@ -163,8 +163,7 @@ namespace AXCPT {
 			}
 		}
 
-		protected override void Start () {
-			base.Start();
+		protected void Start () {
 			practice = GetComponent<AXCPTPractice> ();
 		}
 

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-
+using Subject;
 
 public class CSVWriter {
 
@@ -26,16 +26,12 @@ public class CSVWriter {
 		writer.Close ();
 	}
 
-	public static CSVWriter NewOutputFile(SubjectData subject, string name) {
-		string folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
-		folder = Path.Combine(folder, "OutputLogs");
-		if(!Directory.Exists(folder)) {
-			Directory.CreateDirectory(folder);
-		}
+	public static CSVWriter NewOutputFile(SubjectDataHolder subject, string name) {
+		string folder = Application.persistentDataPath;
 		string subjectFilePrefix = "";
-		if (subject != null && subject.subjectId != null && subject.subjectId.Length > 0) {
-			subjectFilePrefix = subject.subjectId + "_";
-			folder = Path.Combine(folder, subject.subjectId);
+		if (subject != null && subject.data.subjectId != null && subject.data.subjectId.Length > 0) {
+			subjectFilePrefix = subject.data.subjectId + "_";
+			folder = Path.Combine(folder, subject.data.subjectId);
 			if(!Directory.Exists(folder)) {
 				Directory.CreateDirectory(folder);
 			}

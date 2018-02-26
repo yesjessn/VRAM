@@ -153,8 +153,7 @@ namespace VerbalStroop {
 			}
 		}
 
-		protected override void Start () {
-			base.Start();
+		protected void Start () {
 			avatar = GetComponent<AvatarController> ();
 			practice = GetComponent<VerbalStroopPractice> ();
 		}
