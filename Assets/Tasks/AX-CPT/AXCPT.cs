@@ -69,17 +69,17 @@ namespace AXCPT {
 
 		public static string Instructions(this TrialState state, Textures textures) {
 			switch (state) {
-			case TrialState.Starting:     return "<size=60>AX-CPT Task</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na pair of\npictures with\ntext below.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction2: return "<size=60>The 1st picture will\nhave <color=blue>blue</color> text.\nThe 2nd picture will\nhave <color=orange>orange</color> text.\nYour goal is to\nfind the special pair.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction3: return "<size=60>The special pair\nis <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.\nIf you see\nthis pair, press <b>1</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction4: return "<size=60>For all other\n pairs, press <b>2</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction5: return "<size=60>You must respond\nbefore the next\npair appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Ready:        return "<size=60><b>Remember: <color=blue>" + textures.a_group [0].name + "</color>\nbefore <color=orange>" + textures.x_group [0].name + "</color>.</b></size>\n\n<size=30><i>Press 1 to begin task.</i></size>";
-			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\npair appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Ending:       return "<size=60>Note: in the\nreal task,\nyou will se\ndifferent objects\ninstead of shapes.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
+			case TrialState.Starting:     return "<size=60>AX-CPT Task\n\nFor each trial,\nyou will see\na series of\npictures with\ntext below.</size>";
+			case TrialState.Instruction1: return "<size=60>Your job will be\nto decide whether\nyou have seen\nthe target sequence.</size>";
+			case TrialState.Instruction2: return "<size=60>You will often\nsee <i>" + textures.a_group [0].name + "</i>\nfollowed by <color=blue><i>" + textures.x_group [0].name + "</i></color>.</size>";
+			case TrialState.Instruction3: return "<size=60>If you see <i>" + textures.a_group [0].name + "</i>,\npress <b>up</b>.\nThen if you\nsee <color=blue><i>" + textures.x_group [0].name + "</i></color>,\npress <b>down</b>\nbecause you saw\nthe target sequence.</size>";
+			case TrialState.Instruction4: return "<size=60>Sometimes you will\nsee other sequences.\n Press <b>up</b> for all\n other pictures.</size>";
+			case TrialState.Instruction5: return "<size=60>You must respond\nbefore the next\npicture appears.</size>";
+			case TrialState.Ready:        return "<size=60><b>Remember: <i>" + textures.a_group [0].name + "</i>\nbefore <color=blue><i>" + textures.x_group [0].name + "</i></color>.</b></size>\n\n<size=30><i>Coordinator begin task.</i></size>";
+			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any button to continue.</i></size>";
+			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any button to continue.</i></size>";
+			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\npair appears.</size>\n\n<size=30><i>Press any button to continue.</i></size>";
+			case TrialState.Ending:       return "<size=60>Note: in the\nreal task,\nyou will se\ndifferent objects\ninstead of shapes.</size>\n\n<size=30><i>Press any button to continue.</i></size>";
 			default:                      return "";
 			}
 		}
