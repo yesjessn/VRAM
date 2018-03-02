@@ -65,13 +65,12 @@ namespace VerbalStroop {
 
 		public static string Instructions(this TrialState state){
 			switch (state) {
-			case TrialState.Starting:     return "<size=60>Verbal Stroop\nTask</size>\n\n<size=30><i>Please press any key to continue.</i></size>";
-			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na word written\nin a color.\nThe word and\ncolor will change\neach trial.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction2: return "<size=60>Additionally, you will\nhear the teacher\nsay a color.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction3: return "<size=60>Your goal is\nto let the\nteacher know if\nshe read the\nink color correctly.</size>\n\n<size=30><i>Press any key to continue.</i></size>";	
-			case TrialState.Instruction4: return "<size=60>If she is\ncorrect press <b>1</b>.\nIf she is\nincorrect press <b>2</b>.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Instruction5: return "<size=60>You must respond\nbefore the next\nword appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Ready:        return "<size=60><b>Remember:\npress 1 if\nshe is correct\nand press 2 if\nshe is incorrect.</b></size>\n\n<size=30><b>Press 1 to begin task.</b></size>";
+			case TrialState.Starting:     return "<size=60>Verbal Stroop\nTask\n\nFor each trial,\nyou will see\na word written\nin a color.</size>";
+			case TrialState.Instruction1: return "<size=60>The word and\ncolor will change\neach trial.\nAdditionally, you will\nhear the teacher\nsay a color.</size>";
+			case TrialState.Instruction2: return "<size=60>Your goal is\nto let the\nteacher know if\nshe read the\nink color correctly.</size>";
+			case TrialState.Instruction3: return "<size=60>If she is\ncorrect press <b>up</b>.\nIf she is\nincorrect press <b>down</b></size>";	
+			case TrialState.Instruction4: return "<size=60>You must respond\nbefore the next\nword appears.</size>";
+			case TrialState.Ready:        return "<size=60><b>Remember:\npress up if\nshe is correct\nand press down if\nshe is incorrect.</b></size>\n\n<size=30><b>Coordinator begin task.</b></size>";
 			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\nword appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
@@ -85,8 +84,7 @@ namespace VerbalStroop {
 			case TrialState.Instruction1: return TrialState.Instruction2;
 			case TrialState.Instruction2: return TrialState.Instruction3;
 			case TrialState.Instruction3: return TrialState.Instruction4;
-			case TrialState.Instruction4: return TrialState.Instruction5;
-			case TrialState.Instruction5: return TrialState.Ready;
+			case TrialState.Instruction4: return TrialState.Ready;
 			case TrialState.Ready:        return TrialState.ITI;
 			case TrialState.Word:         return TrialState.ITI;
 			case TrialState.ITI:          return TrialState.Word;
@@ -191,11 +189,12 @@ namespace VerbalStroop {
 
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty(); 
 				if (recorder.isRecording && trialState == TrialState.ITI) {
+					var responses = recorder.StopRecording ();
+					salienceController.addResponseResult(trialList.trialProperties[currentTrial].CheckResponse(responses.Last().buttonPressed));
 					if (practice.enabled) {
-						nextState = practice.HandleStopRecording (trialState, recorder, trialList.trialProperties [currentTrial]);
+						nextState = practice.HandleResponse (trialState, responses, trialList.trialProperties[currentTrial]);
 					} else {
-						var response = recorder.StopRecording ();
-						var output = new TrialOutput (currentTrial, trialList.trialProperties [currentTrial], response);
+						var output = new TrialOutput (currentTrial, trialList.trialProperties[currentTrial], responses);
 						recordResults.WriteRow (output.ToString ());
 					}
 				}

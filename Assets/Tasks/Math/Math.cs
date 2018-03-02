@@ -27,9 +27,9 @@ namespace Math {
 
 		public static string Instructions(this TrialState state){
 			switch (state) {
-			case TrialState.Starting:     return "<size=60>Math\nTask</size>\n\n<size=30><i>Please press any key to continue.</i></size>";
-			case TrialState.Instruction1: return "<size=60>For each trial,\nyou will see\na math problem.\n\n</size><size=30><i>Press any key to continue.</i></size>";
-			case TrialState.Ready:        return "<size=60><b>You only have\n30 seconds to\ncomplete the\nproblem before\nthe next\nquestion appears.</b></size>\n\n<size=30><b>Press 1 to begin task.</b></size>";
+			case TrialState.Starting:     return "<size=60>Math\nTask\n\nFor each trial,\nyou will see\na math problem.</size>";
+			case TrialState.Instruction1: return "<size=60>The problems are\nin multiple choice\nformat.</size>";
+			case TrialState.Ready:        return "<size=60><b>You only have\n30 seconds to\ncomplete the\nproblem before\nthe next\nquestion appears.</b></size>\n\n<size=30><i>Coordinator begin task.</i></size>";
 			case TrialState.Correct:      return "<size=60>Correct!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Incorrect:    return "<size=60>Incorrect.\nTry again!</size>\n\n<size=30><i>Press any key to continue.</i></size>";
 			case TrialState.Slow:         return "<size=60><b>Too slow!</b>\nYou must respond\nbefore the next\nword appears.</size>\n\n<size=30><i>Press any key to continue.</i></size>";
@@ -97,6 +97,7 @@ namespace Math {
 
         public Textures textures;
 		public RecordResponses recorder;
+		public MathProblemChecker checker;
 
 		private TrialState trialState;
 		private int currentTrial;
@@ -131,6 +132,9 @@ namespace Math {
 			blockTimer = new CountdownTimer (BlockTime);
 			recordResults = CSVWriter.NewOutputFile(subject, "math_results");
 			recordResults.WriteRow ("trial_number,block_number,trial_item,button_pressed,reaction_time");
+			if (practice != null) {
+				practice.SetProblemChecker(checker);
+			}
 		}
 
 		void OnDisable() {
@@ -179,11 +183,12 @@ namespace Math {
 					Option<TrialState> nextState = Option<TrialState>.CreateEmpty ();
 					if (blockComplete || finishState || finishInstructions || finishReady) {
 						if (trialState == TrialState.Problem) {
+							var responses = recorder.StopRecording ();
+							salienceController.addResponseResult(checker.Check(currentProblemName, responses.Last().buttonPressed));
 							if (practice.enabled) {
-								nextState = practice.HandleStopRecording (trialState, recorder, currentProblemName);
+								nextState = practice.HandleResponse (trialState, responses, currentProblemName);
 							} else {
-								var response = recorder.StopRecording ();
-								var output = new TrialOutput (currentTrial, currentBlock, type, response);
+								var output = new TrialOutput (currentTrial, currentBlock, type, responses);
 								recordResults.WriteRow (output.ToString ());
 							}
 						}

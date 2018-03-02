@@ -200,11 +200,12 @@ namespace AXCPT {
 
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty();
 				if (recorder.isRecording && (trialState == TrialState.ISI || trialState == TrialState.PreCueITI)) {
+					var responses = recorder.StopRecording ();
+					salienceController.addResponseResult(trialList.trialTypes[currentTrial].CheckResponse(trialState, responses.Count > 0 ? responses.Last().buttonPressed : null));
 					if (practice.enabled) {
-						nextState = practice.HandleStopRecording (trialState, recorder, trialList.trialTypes [currentTrial]);
+						nextState = practice.HandleResponse (trialState, responses, trialList.trialTypes[currentTrial]);
 					} else {
-						var response = recorder.StopRecording ();
-						var output = new TrialOutput (currentTrial, trialList.trialTypes [currentTrial], trialState, stimulusName, response);
+						var output = new TrialOutput (currentTrial, trialList.trialTypes[currentTrial], trialState, stimulusName, responses);
 						recordResults.WriteRow (output.ToString ());
 					}
 				}
