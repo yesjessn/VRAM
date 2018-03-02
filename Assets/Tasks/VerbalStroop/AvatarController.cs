@@ -12,8 +12,8 @@ namespace VerbalStroop {
 		public string blueTrigger;
 		public string greenTrigger;
 
-		void Start() {
-			controller = GameObject.Find ("Teacher").GetComponent<AvatarTalkController> ();
+		void Awake() {
+			controller = GameObject.Find ("NewestTeacher").GetComponent<AvatarTalkController> ();
 		}
 
 

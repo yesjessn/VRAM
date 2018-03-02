@@ -153,7 +153,6 @@ namespace VerbalStroop {
 
 		protected void Awake () {
 			base.Awake();
-			avatar = GetComponent<AvatarController> ();
 			practice = GetComponent<VerbalStroopPractice> ();
 		}
 
@@ -164,6 +163,7 @@ namespace VerbalStroop {
 			this.timer = new CountdownTimer (-1);
 			recordResults = CSVWriter.NewOutputFile(subject, "verbal_stroop_results");
 			recordResults.WriteRow ("trial_number,trial_properties,button_pressed,reaction_time");
+			avatar = GetComponent<AvatarController> ();
 		}
 
 		void OnDisable() {

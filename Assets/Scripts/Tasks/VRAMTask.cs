@@ -30,9 +30,6 @@ public abstract class VRAMTask : MonoBehaviour {
         }
 		input = FindObjectOfType<InputBroker>();
         subject = FindObjectOfType<SubjectDataHolder>();
-    }
-
-    protected void Start() {
         subject.LoadSubjectData();
         salienceController.ResetRunningAverage();
     }
