@@ -10,6 +10,7 @@ using VerbalStroop;
 public class TaskSelector : MonoBehaviour {
 
     public static TaskSelector instance;
+
     public GameObject[] tasks;
 	public Dropdown taskDropdown;
 	public Dropdown categoryDropdown;
@@ -20,6 +21,7 @@ public class TaskSelector : MonoBehaviour {
 	public VRAMTask axcptTask;
 	public VRAMTask mathTask;
 	public VRAMTask verbalStroopTask;
+	public VRAMTask noTask;
     private VRAMTask _activeTask;
 	public VRAMTask activeTask {get {return _activeTask;}}
 
@@ -68,8 +70,13 @@ public class TaskSelector : MonoBehaviour {
 			_activeTask = verbalStroopTask;
 			SceneManager.LoadScene ("VRClassRoom");
 			break;
-		case 5:verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
+		case 5:
+			verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
 			_activeTask = verbalStroopTask;
+			SceneManager.LoadScene ("VRClassRoom");
+			break;
+		case 6:
+			_activeTask = noTask;
 			SceneManager.LoadScene ("VRClassRoom");
 			break;
 		}
