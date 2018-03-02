@@ -4,10 +4,12 @@ namespace Subject {
     [Serializable]
     public class SessionData {
         public int sessionNumber;
-        DateTime completionDate;
+        public DateTime completionDate;
+        public float salience;
 
-        public SessionData(DateTime completionDate) {
+        public SessionData(DateTime completionDate, float salience) {
             this.completionDate = completionDate;
+            this.salience = salience;
         }
     }
 }

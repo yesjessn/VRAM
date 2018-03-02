@@ -11,13 +11,12 @@ namespace AXCPT {
 
 		void Start () {}
 
-		public Option<TrialState> HandleStopRecording(TrialState state, RecordResponses recorder, TrialType trialType) {
-			var response = recorder.StopRecording ();
+		public Option<TrialState> HandleResponse(TrialState state, List<RecordResponses.Response> responses, TrialType trialType) {
 			_previousState = state;
 			if (state == TrialState.ISI || state == TrialState.PreCueITI) {
-				if (response.Count == 0) {
+				if (responses.Count == 0) {
 					return Option<TrialState>.Create(TrialState.Slow);
-				} else if (trialType.CheckResponse (state, response.Last().buttonPressed)) {
+				} else if (trialType.CheckResponse (state, responses.Last().buttonPressed)) {
 					return Option<TrialState>.Create(TrialState.Correct);
 				} else {
 					return Option<TrialState>.Create(TrialState.Incorrect);

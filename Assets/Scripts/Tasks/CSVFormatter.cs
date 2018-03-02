@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 
 public class CsvFormatter<T> : IFormatter where T: class
 {
@@ -42,7 +43,7 @@ public class CsvFormatter<T> : IFormatter where T: class
                 for (int i = 0; i < members.Length; ++i)
                 {
                     FieldInfo fi = ((FieldInfo)members[i]);
-                    data[i] = Convert.ChangeType(fieldData.ElementAt(i), fi.FieldType);
+                    data[i] = Convert.ChangeType(fieldData.ElementAt(i), fi.FieldType, CultureInfo.InvariantCulture);
                 }
                 list.Add((T)FormatterServices.PopulateObjectMembers(obj, members, data));
             }

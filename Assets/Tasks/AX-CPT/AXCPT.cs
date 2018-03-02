@@ -163,11 +163,13 @@ namespace AXCPT {
 			}
 		}
 
-		protected void Start () {
+		protected void Awake () {
+			base.Awake();
 			practice = GetComponent<AXCPTPractice> ();
 		}
 
 		void OnEnable() {
+			base.OnEnable();
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			timer = new CountdownTimer (-1);

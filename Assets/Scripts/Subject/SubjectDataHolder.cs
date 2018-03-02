@@ -5,11 +5,20 @@ using UnityEngine;
 
 namespace Subject {
     public class SubjectDataHolder : MonoBehaviour {
-        public SubjectData data;
+        public static SubjectDataHolder instance;
 
+        public SubjectData data = new SubjectData();
+
+        void Awake() {
+            if(instance != null) {
+                Destroy(this.gameObject);
+            } else {
+                instance = this;
+            }
+        }
+        
         public void SetSubjectId(string subjectId) {
             data.subjectId = subjectId;
-            LoadSubjectData();
         }
 
         public void AppendSession(SessionData session) {
@@ -26,11 +35,12 @@ namespace Subject {
 
             string sessionsFile = Path.Combine(folder, "sessions.csv");
             if (File.Exists(sessionsFile)) {
-                var serializer = new CsvFormatter<SessionData>(',', true);
+                var serializer = new CsvFormatter<SessionData>(',');
                 FileStream stream = File.Open(sessionsFile, FileMode.Open);
                 data.sessions = (List<SessionData>) serializer.Deserialize(stream);
                 stream.Close();
             }
+            Debug.Log(String.Format("Loaded {0} sessions for '{1}'", data.sessions.Count, data.subjectId), this.gameObject);
         }
 
         public void SaveSubjectData() {
@@ -42,15 +52,11 @@ namespace Subject {
 
             string sessionsFile = Path.Combine(folder, "sessions.csv");
             {
-                var serializer = new CsvFormatter<SessionData>(',', true);
+                var serializer = new CsvFormatter<SessionData>(',');
                 FileStream stream = File.Create(sessionsFile);
                 serializer.Serialize(stream, data.sessions);
                 stream.Close();
             }
-        }
-
-        void OnDisable() {
-            SaveSubjectData();
         }
     }
 }

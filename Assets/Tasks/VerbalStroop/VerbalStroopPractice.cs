@@ -9,12 +9,11 @@ public class VerbalStroopPractice : MonoBehaviour {
 
 		void Start () {}
 
-		public Option<TrialState> HandleStopRecording(TrialState state, RecordResponses recorder, TrialProperties trialProperties) {
-			var response = recorder.StopRecording ();
+		public Option<TrialState> HandleResponse(TrialState state, List<RecordResponses.Response> responses, TrialProperties trialProperties) {
 			if (state == TrialState.ITI) {
-				if (response.Count == 0) {
+				if (responses.Count == 0) {
 					return Option<TrialState>.Create(TrialState.Slow);
-				} else if (trialProperties.CheckResponse (response.Last().buttonPressed)) {
+				} else if (trialProperties.CheckResponse (responses.Last().buttonPressed)) {
 					return Option<TrialState>.Create(TrialState.Correct);
 				} else {
 					return Option<TrialState>.Create(TrialState.Incorrect);

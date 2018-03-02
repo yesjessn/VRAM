@@ -151,12 +151,14 @@ namespace VerbalStroop {
 			}
 		}
 
-		protected void Start () {
+		protected void Awake () {
+			base.Awake();
 			avatar = GetComponent<AvatarController> ();
 			practice = GetComponent<VerbalStroopPractice> ();
 		}
 
 		void OnEnable() {
+			base.OnEnable();
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			trialState = TrialState.Starting;
 			this.timer = new CountdownTimer (-1);
@@ -190,7 +192,7 @@ namespace VerbalStroop {
 				Option<TrialState> nextState = Option<TrialState>.CreateEmpty(); 
 				if (recorder.isRecording && trialState == TrialState.ITI) {
 					var responses = recorder.StopRecording ();
-					salienceController.addResponseResult(trialList.trialProperties[currentTrial].CheckResponse(responses.Last().buttonPressed));
+					salienceController.addResponseResult(trialList.trialProperties[currentTrial].CheckResponse(responses.Count > 0 ? responses.Last().buttonPressed : null));
 					if (practice.enabled) {
 						nextState = practice.HandleResponse (trialState, responses, trialList.trialProperties[currentTrial]);
 					} else {
@@ -221,9 +223,6 @@ namespace VerbalStroop {
 				if (instruction != "") {
 					ShowText(instruction);
 				} else {
-					// currentTrial will be -1 on the first precueiti state when we need to show the iti texture
-					// in that case, using null is okay for trial type because the iti texture doesn't depend on the trial type.
-					var trialProperties = currentTrial == -1 ? null : trialList.trialProperties [currentTrial];
 					switch (trialState) {
 					case TrialState.Word:
 						avatar.Play (trialList.trialProperties [currentTrial].sound);

@@ -3,7 +3,17 @@ using SMI;
 
 namespace SMI {
     public class Calibrater : MonoBehaviour {
+        public static Calibrater instance;
+        
         private bool _toggleValidationWindow = false;
+
+        void Awake() {
+            if(instance != null) {
+                Destroy(this.gameObject);
+            } else {
+                instance = this;
+            }
+        }
 
         void OnCalibrationResult(int returnCode) {
             Debug.Log("SMI HMD calibration result: " + SMI.SMIEyeTrackingUnity.ErrorIDContainer.getErrorMessage(returnCode));

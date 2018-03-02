@@ -28,7 +28,7 @@ namespace Math {
 
 		public bool Check(string problemName, string button) {
 			if (solutions.ContainsKey(problemName)) {
-				return button.Equals(solutions[problemName]);
+				return solutions[problemName].Equals(button);
 			}
 			print ("Problem name: '" + problemName + "' does not have a solution defined!");
 			return false;

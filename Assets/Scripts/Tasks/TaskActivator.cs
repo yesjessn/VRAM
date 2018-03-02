@@ -3,10 +3,9 @@ using UnityEngine;
 
 public class TaskActivator : MonoBehaviour {
 	void Awake() {
-		var sel = TaskSelector.instance;
-		if (sel != null) {
-			sel.ActivateActiveTask();
-		}
+		var taskList = TaskList.instance;
+		var task = taskList.GetActiveTask();
+		task.gameObject.SetActive(true);
 	}
 }
 

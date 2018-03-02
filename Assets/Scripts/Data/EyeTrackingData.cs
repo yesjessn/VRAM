@@ -27,15 +27,28 @@ public class EyeTrackingData : MonoBehaviour {
 
 		
 		public void Update() {
-			binocularPor = SMI.SMIEyeTrackingUnity.Instance.smi_GetBinocularPor ();
-			cameraRaycast = SMI.SMIEyeTrackingUnity.Instance.smi_GetCameraRaycast ();
-			ipd = SMI.SMIEyeTrackingUnity.Instance.smi_GetIPD ();
-			leftPor = SMI.SMIEyeTrackingUnity.Instance.smi_GetLeftPor ();
-			rightPor = SMI.SMIEyeTrackingUnity.Instance.smi_GetRightPor ();
-			leftBasePoint = SMI.SMIEyeTrackingUnity.Instance.smi_GetLeftGazeBase ();
-			rightBasePoint = SMI.SMIEyeTrackingUnity.Instance.smi_GetRightGazeBase ();
-			leftGazeDirection = SMI.SMIEyeTrackingUnity.Instance.smi_GetLeftGazeDirection ();
-			rightGazeDirection = SMI.SMIEyeTrackingUnity.Instance.smi_GetRightGazeDirection ();
+			var smi = SMI.SMIEyeTrackingUnity.Instance;
+			if (smi != null) {
+				binocularPor = smi.smi_GetBinocularPor ();
+				cameraRaycast = smi.smi_GetCameraRaycast ();
+				ipd = smi.smi_GetIPD ();
+				leftPor = smi.smi_GetLeftPor ();
+				rightPor = smi.smi_GetRightPor ();
+				leftBasePoint = smi.smi_GetLeftGazeBase ();
+				rightBasePoint = smi.smi_GetRightGazeBase ();
+				leftGazeDirection = smi.smi_GetLeftGazeDirection ();
+				rightGazeDirection = smi.smi_GetRightGazeDirection ();
+			} else {
+				binocularPor = Vector2.zero;
+				cameraRaycast = Vector3.zero;
+				ipd = 0f;
+				leftPor = Vector2.zero;
+				rightPor = Vector2.zero;
+				leftBasePoint = Vector3.zero;
+				rightBasePoint = Vector3.zero;
+				leftGazeDirection = Vector3.zero;
+				rightGazeDirection = Vector3.zero;
+			}
 		}
 	}
 
@@ -81,7 +94,6 @@ public class EyeTrackingData : MonoBehaviour {
 		public Distraction.Distraction currentDistraction;
 
 		// Task
-		public TaskSelector taskSelector;
 		public string activeTaskName;
 		public string currentTaskState;
 
@@ -101,7 +113,7 @@ public class EyeTrackingData : MonoBehaviour {
 			this.distanceToObject = GetHitObjectDistance();
 			this.currentDistraction = distractionController.GetCurrentDistraction();
 
-			var activeTask = taskSelector.activeTask;
+			var activeTask = TaskList.instance.GetActiveTask();
 			this.activeTaskName = activeTask != null ? activeTask.name : "";
 			this.currentTaskState = activeTask != null ? activeTask.GetCurrentState() : "";
 		}
@@ -218,6 +230,8 @@ public class EyeTrackingData : MonoBehaviour {
 
 	static TimeSpan NO_DELAY = new TimeSpan(0, 0, 0);
 
+	public static EyeTrackingData instance;
+
 	public string filename;
 	public bool recordingEnabled;
 
@@ -295,10 +309,6 @@ public class EyeTrackingData : MonoBehaviour {
 				latestData.distractionController = distractionObj.GetComponent<DistractionController>();
 			}
 
-			var taskControllerObj = GameObject.Find("TaskController");
-			if (taskControllerObj != null) {
-				latestData.taskSelector = taskControllerObj.GetComponent<TaskSelector>();
-			}
 			latestData.update();
 		}
 
@@ -314,13 +324,18 @@ public class EyeTrackingData : MonoBehaviour {
 	}
 
 	void Awake() {
-		outputFile = CSVWriter.NewOutputFile(FindObjectOfType<SubjectDataHolder>(), filename);
-		messageQueue.Enqueue(RowData.HEADER);
+        if(instance != null) {
+            Destroy(this.gameObject);
+        } else {
+            instance = this;
+			outputFile = CSVWriter.NewOutputFile(FindObjectOfType<SubjectDataHolder>(), filename);
+			messageQueue.Enqueue(RowData.HEADER);
 
-		var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });
-		var fileWriteInterval = new TimeSpan(0, 0, 10); // Every 10 seconds
-		this.fileWriteTimer = new Timer(fileWriteCallback, null, NO_DELAY, fileWriteInterval);
-		print("Started file writer. Schedule: every " + fileWriteInterval.ToString());
+			var fileWriteCallback = new TimerCallback(delegate(object state) { WriteDataToFile(); });
+			var fileWriteInterval = new TimeSpan(0, 0, 10); // Every 10 seconds
+			this.fileWriteTimer = new Timer(fileWriteCallback, null, NO_DELAY, fileWriteInterval);
+			print("Started file writer. Schedule: every " + fileWriteInterval.ToString());
+		}
 	}
 
 	void OnDestroy() {

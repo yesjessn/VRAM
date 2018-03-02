@@ -21,7 +21,6 @@ namespace Distraction {
         [SerializeField]
         private Gazer gazerToModify;
 
-        public float volume = 0.5f;
         public string animTriggerName;
 		public string distractionName;
 		public string distractionObjectName;
@@ -47,13 +46,13 @@ namespace Distraction {
 			distractionObjectName = gameObject.gameObject.name;
 		}
 
-        public void TriggerDistraction(Action callback) {
+        public void TriggerDistraction(float salience, Action callback) {
 			activateCollider ();
 			updateGazer ();
 			var animDuration = triggerAnimation ();
-			var soundDuration = playSound ();
+			var soundDuration = playSound (salience);
 			var maxDuration = System.Math.Max (animDuration, soundDuration);
-			print("Starting distraction: " + distractionName);
+			Debug.Log(String.Format("Starting distraction: {0} with salience {1:N2}", distractionName, salience), this.gameObject);
 			setupOnComplete (callback, maxDuration);
         }
 
@@ -68,8 +67,9 @@ namespace Distraction {
 			}
 		}
 
-		private float playSound() {
+		private float playSound(float salience) {
 			if (distractionType == DistractionTypes.Audio || distractionType == DistractionTypes.AudioVisual) {
+				var volume = salience;
 				soundSource.PlayOneShot (soundClip, volume);
 				return soundClip.length;
 			}

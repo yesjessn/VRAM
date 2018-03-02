@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Subject;
 
@@ -27,21 +28,33 @@ namespace Distraction {
 	}
 
 	public class DistractionController : MonoBehaviour {
+		public static DistractionController instance;
+
 		private TimerState timerState;
 		private CountdownTimer timer;
 		private CSVWriter recordDistractors;
 
 		private Distraction[] distractions;
-
 		private Distraction currentDistraction;
+
+    	private SubjectDataHolder subject;
+		private SalienceController salienceController;
 
 		private readonly Action endDistraction;
 
 		public DistractionController() {
 			endDistraction = () => currentDistraction = null;
 		}
+
 		void Awake () {
-			distractions = FindObjectsOfType (typeof(Distraction)) as Distraction[];
+			if (instance != null) {
+				Destroy(this.gameObject);
+			} else {
+				instance = this;
+				distractions = FindObjectsOfType (typeof(Distraction)) as Distraction[];
+				subject = FindObjectOfType<SubjectDataHolder>();
+				salienceController = FindObjectOfType<SalienceController>();
+			}
 		}
 
 		// Use this for initialization
@@ -56,7 +69,13 @@ namespace Distraction {
 			foreach (Distraction d in distractions) {
 				ds.Add(d.distractionName);
 			}
-			print ("Found distractors:" + string.Join(", ", ds.ToArray()));
+			Debug.Log("Found distractors:" + string.Join(", ", ds.ToArray()));
+
+			if (subject.data != null && subject.data.sessions != null && subject.data.sessions.Count > 0) {
+				var last = subject.data.sessions.Last();
+				salienceController.salience = last.salience;
+				Debug.Log("Setting initial salience to " + last.salience);
+			}
 		}
 
 		// Update is called once per frame
@@ -74,7 +93,7 @@ namespace Distraction {
 					if (distractions.Length > 0) {
 						currentDistraction = distractions [UnityEngine.Random.Range (0, distractions.Length)];
 						recordDistractors.WriteRow (Time.time + "," + currentDistraction.distractionName);
-						currentDistraction.TriggerDistraction (endDistraction);
+						currentDistraction.TriggerDistraction (salienceController.salience, endDistraction);
 					}
 				}
 				timerState = timerState.Next ();

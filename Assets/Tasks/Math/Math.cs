@@ -119,11 +119,13 @@ namespace Math {
 			}
 		}
 
-		protected void Start () {
+		protected void Awake () {
+			base.Awake();
 			practice = GetComponent<MathPractice> ();
 		}
 
 		void OnEnable() {
+			base.OnEnable();
 			currentTrial = -1; // Start at -1 because we start the trial into ITI which will increment currentTrial
 			currentBlock = 0;
 			type = BlockType.Easy;
@@ -184,7 +186,7 @@ namespace Math {
 					if (blockComplete || finishState || finishInstructions || finishReady) {
 						if (trialState == TrialState.Problem) {
 							var responses = recorder.StopRecording ();
-							salienceController.addResponseResult(checker.Check(currentProblemName, responses.Last().buttonPressed));
+							salienceController.addResponseResult(checker.Check(currentProblemName, responses.Count > 0 ? responses.Last().buttonPressed : null));
 							if (practice.enabled) {
 								nextState = practice.HandleResponse (trialState, responses, currentProblemName);
 							} else {

@@ -6,89 +6,88 @@ using UnityEngine.UI;
 using AXCPT;
 using Math;
 using VerbalStroop;
+using Subject;
 
 public class TaskSelector : MonoBehaviour {
-
-    public static TaskSelector instance;
-
     public GameObject[] tasks;
+	public InputField subjectField;
 	public Dropdown taskDropdown;
 	public Dropdown categoryDropdown;
 	public Dropdown gradeDropdown;
 	public GameObject mainMenu;
 	public GameObject axcptMenu;
 	public GameObject mathMenu;
-	public VRAMTask axcptTask;
-	public VRAMTask mathTask;
-	public VRAMTask verbalStroopTask;
-	public VRAMTask noTask;
+
+	private TaskList taskList;
+	private SubjectDataHolder subject;
+	
     private VRAMTask _activeTask;
 	public VRAMTask activeTask {get {return _activeTask;}}
 
-    void Awake()
-    {
-        if(instance != null)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
+    void Awake() {
+		taskList = TaskList.instance;
+		subject = FindObjectOfType<SubjectDataHolder>();
     }
 
 	public void SelectTask() {
 		var selectedTask = taskDropdown.value;
 		switch (selectedTask) {
 		case 0:
-			mainMenu.SetActive (false);
-			axcptMenu.SetActive (true);
-			axcptTask.GetComponent<AXCPTPractice>().enabled = false;
+			if (taskList.axcpt != null) {
+				mainMenu.SetActive (false);
+				axcptMenu.SetActive (true);
+				taskList.axcpt.GetComponent<AXCPTPractice>().enabled = false;
+			}
 			break;
 		case 1:
-			mainMenu.SetActive (false);
-			CategoryLoader categoryloader = axcptTask.GetComponent (typeof(CategoryLoader)) as CategoryLoader;
-			categoryloader.LoadCategoryByString ("Shapes");
-			axcptTask.GetComponent<AXCPTPractice>().enabled = true;
-			_activeTask = axcptTask;
-			SceneManager.LoadScene("VRClassRoom");
+			if (taskList.axcpt != null) {
+				mainMenu.SetActive (false);
+				CategoryLoader categoryloader = taskList.axcpt.GetComponent (typeof(CategoryLoader)) as CategoryLoader;
+				categoryloader.LoadCategoryByString ("Shapes");
+				taskList.axcpt.GetComponent<AXCPTPractice>().enabled = true;
+				StartTask(taskList.axcpt);
+			}
 			break;
 		case 2:
-			mainMenu.SetActive (false);
-			mathMenu.SetActive (true);
-			mathTask.GetComponent<MathPractice>().enabled = false;
+			if (taskList.math != null) {
+				mainMenu.SetActive (false);
+				mathMenu.SetActive (true);
+				taskList.math.GetComponent<MathPractice>().enabled = false;
+			}
 			break;
 		case 3: 
-			mainMenu.SetActive (false);
-			mathTask.GetComponent<MathPractice>().enabled = true;
-			_activeTask = mathTask;
-			SceneManager.LoadScene ("VRClassRoom");
+			if (taskList.math != null) {
+				mainMenu.SetActive (false);
+				taskList.math.GetComponent<MathPractice>().enabled = true;
+				StartTask(taskList.math);
+			}
 			break;
 		case 4:
-			mainMenu.SetActive (false);
-			verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = false;
-			_activeTask = verbalStroopTask;
-			SceneManager.LoadScene ("VRClassRoom");
+			if (taskList.verbalStroop != null) {
+				mainMenu.SetActive (false);
+				taskList.verbalStroop.GetComponent<VerbalStroopPractice>().enabled = false;
+				StartTask(taskList.verbalStroop);
+			}
 			break;
 		case 5:
-			verbalStroopTask.GetComponent<VerbalStroopPractice>().enabled = true;
-			_activeTask = verbalStroopTask;
-			SceneManager.LoadScene ("VRClassRoom");
+			if (taskList.verbalStroop != null) {
+				taskList.verbalStroop.GetComponent<VerbalStroopPractice>().enabled = true;
+				StartTask(taskList.verbalStroop);
+			}
 			break;
 		case 6:
-			_activeTask = noTask;
-			SceneManager.LoadScene ("VRClassRoom");
+			if (taskList.noTask != null) {
+				StartTask(taskList.noTask);
+			}
 			break;
 		}
 	}
 
-    public void ActivateActiveTask()
-    {
-        if (_activeTask != null)
-            _activeTask.gameObject.SetActive(true);
-        else
-            Debug.LogError("There was no task selected");
-    }
+	private void StartTask(VRAMTask task) {
+		taskList.SetActiveTask(task);
+		subject.SetSubjectId(subjectField.text);
+		SceneManager.LoadScene ("VRClassRoom");
+	}
 
 	public void BackToMainMenu() {
 		axcptMenu.SetActive (false);
@@ -98,22 +97,17 @@ public class TaskSelector : MonoBehaviour {
 
 	public void SelectAXCPTCategory() {
 		var selectedCategory = categoryDropdown.value;
-		CategoryLoader categoryloader = axcptTask.GetComponent (typeof(CategoryLoader)) as CategoryLoader;
+		CategoryLoader categoryloader = taskList.axcpt.GetComponent (typeof(CategoryLoader)) as CategoryLoader;
 		categoryloader.LoadCategory (selectedCategory);
 		axcptMenu.SetActive (false);
-        _activeTask = axcptTask;
-        SceneManager.LoadScene("VRClassRoom");
-        //axcptTask.SetActive (true);
+        StartTask(taskList.axcpt);
 	}
 
 	public void SelectMathGrade() {
 		var selectedGrade = gradeDropdown.value + 3;
-		GradeLoader gradeloader = mathTask.GetComponent (typeof(GradeLoader)) as GradeLoader;
+		GradeLoader gradeloader = taskList.math.GetComponent (typeof(GradeLoader)) as GradeLoader;
 		gradeloader.LoadGrade (selectedGrade);
 		mathMenu.SetActive (false);
-        _activeTask = mathTask;
-        SceneManager.LoadScene("VRClassRoom");
-        //mathTask.SetActive (true);
+        StartTask(taskList.math);
     }
-
 }

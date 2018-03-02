@@ -14,22 +14,27 @@ public abstract class VRAMTask : MonoBehaviour {
     private ShowImage whiteboardImage;
     protected InputBroker input;
     protected SubjectDataHolder subject;
+    protected SalienceController salienceController;
 
-    void Awake() {
+    protected void Awake() {
+        salienceController = distractionController.GetComponent<SalienceController>();
+    }
+
+    protected void OnEnable() {
         var wb = GameObject.Find("WhiteBoardWithDisplay");
         if (wb != null) {
             whiteboardText = wb.GetComponent<ShowText>();
             whiteboardText.Hide();
             whiteboardImage = wb.GetComponent<ShowImage>();
             whiteboardImage.Hide();
-        } else {
-            print("ERROR: WhiteBoardWithDisplay not found!");
         }
 		input = FindObjectOfType<InputBroker>();
-        if (input == null) {
-            print("ERROR: Could not find InputBroker!");
-        }
         subject = FindObjectOfType<SubjectDataHolder>();
+    }
+
+    protected void Start() {
+        subject.LoadSubjectData();
+        salienceController.ResetRunningAverage();
     }
 
     protected void ShowImage(Texture img) {
@@ -54,7 +59,9 @@ public abstract class VRAMTask : MonoBehaviour {
         whiteboardText.Hide();
         distractionController.gameObject.SetActive (false);
         this.gameObject.SetActive(false);
-        subject.AppendSession(new SessionData(DateTime.Now));
+        subject.AppendSession(new SessionData(DateTime.Now, salienceController.salience));
+        subject.SaveSubjectData();
+		TaskList.instance.ClearActiveTask();
         SceneManager.LoadScene ("MenuScene");
     }
 
