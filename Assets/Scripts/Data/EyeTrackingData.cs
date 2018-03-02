@@ -11,6 +11,9 @@ using SMI;
 using Distraction;
 using Subject;
 
+// This sets up two threads:
+// 1) Poll eye tracking data and task state every 4ms and enqueue the results
+// 2) Drain the queue and write all entries to the output file every 10 seconds
 public class EyeTrackingData : MonoBehaviour {
 	class EyeData {
 

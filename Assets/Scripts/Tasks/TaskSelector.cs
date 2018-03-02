@@ -8,6 +8,7 @@ using Math;
 using VerbalStroop;
 using Subject;
 
+// Class responsible for turning menu -> running task.
 public class TaskSelector : MonoBehaviour {
     public GameObject[] tasks;
 	public InputField subjectField;

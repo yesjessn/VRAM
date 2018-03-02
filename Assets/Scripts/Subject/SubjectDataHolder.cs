@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Subject {
+    // This class is a component for holding the SubjectData (which is a simple data holder).
     public class SubjectDataHolder : MonoBehaviour {
         public static SubjectDataHolder instance;
 

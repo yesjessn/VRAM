@@ -4,6 +4,7 @@ using System.Threading.Collections;
 using System.Linq;
 using UnityEngine;
 
+// This class is to make the selections compatible with both keyboard and controller.
 public class InputBroker : MonoBehaviour {
 	private readonly ConcurrentQueue<string> keyQueue = new ConcurrentQueue<string>();
 	private HashSet<string> forcedKeys = new HashSet<string>();
